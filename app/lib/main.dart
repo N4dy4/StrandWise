@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
+import 'features/content/content_hub_screen.dart';
+import 'models/hair_profile.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -55,6 +57,18 @@ class HomeScreen extends StatelessWidget {
                       ? 'Connected to Supabase.'
                       : 'Running locally — Supabase not configured yet.',
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      // Placeholder until the Phase 1 onboarding quiz exists.
+                      builder: (_) => const ContentHubScreen(
+                        profile: HairProfile(curlPattern: '3B'),
+                      ),
+                    ),
+                  ),
+                  child: const Text('Discover'),
                 ),
               ],
             ),
