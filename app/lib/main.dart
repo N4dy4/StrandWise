@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
 import 'features/content/content_hub_screen.dart';
+import 'data/profile_store.dart';
+import 'features/onboarding/onboarding_screen.dart';
+import 'features/routine/routine_screen.dart';
 import 'models/hair_profile.dart';
 import 'theme/app_theme.dart';
 
@@ -32,8 +35,37 @@ class StrandWiseApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  HairProfile? profile;
+
+  @override
+  void initState() {
+    super.initState();
+    ProfileStore.load().then((p) {
+      if (mounted) setState(() => profile = p);
+    }).catchError((_) {});
+  }
+
+  void _open(BuildContext context, Widget screen) => Navigator.of(context)
+      .push(MaterialPageRoute<void>(builder: (_) => screen));
+
+  void _quiz(BuildContext context) => _open(
+        context,
+        OnboardingScreen(
+          initial: profile,
+          onDone: (p) {
+            setState(() => profile = p);
+            Navigator.of(context).pop();
+          },
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -59,17 +91,30 @@ class HomeScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      // Placeholder until the Phase 1 onboarding quiz exists.
-                      builder: (_) => const ContentHubScreen(
-                        profile: HairProfile(curlPattern: '3B'),
-                      ),
-                    ),
+                if (profile == null)
+                  FilledButton(
+                    onPressed: () => _quiz(context),
+                    child: const Text('Take the hair quiz'),
+                  )
+                else ...[
+                  Text('Your hair: ${profile!.curlPattern}'),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () => _open(
+                        context, RoutineScreen(profile: profile!)),
+                    child: const Text('My routine'),
                   ),
-                  child: const Text('Discover'),
-                ),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    onPressed: () => _open(
+                        context, ContentHubScreen(profile: profile!)),
+                    child: const Text('Discover'),
+                  ),
+                  TextButton(
+                    onPressed: () => _quiz(context),
+                    child: const Text('Retake quiz'),
+                  ),
+                ],
               ],
             ),
           ),

@@ -1,5 +1,5 @@
 -- Phase 2: content feed + product knowledge base. RLS on everything (R4).
--- Content/product catalogs are read-only to signed-in users; writes via service role only.
+-- Content/product catalogs are read-only (public catalog data, no user data); writes via service role only.
 
 create table if not exists public.content_items (
   id uuid primary key default gen_random_uuid(),
@@ -37,7 +37,7 @@ alter table public.ingredients enable row level security;
 alter table public.products enable row level security;
 alter table public.product_ingredients enable row level security;
 
-create policy "read content" on public.content_items for select to authenticated using (true);
-create policy "read ingredients" on public.ingredients for select to authenticated using (true);
-create policy "read products" on public.products for select to authenticated using (true);
-create policy "read product_ingredients" on public.product_ingredients for select to authenticated using (true);
+create policy "read content" on public.content_items for select to anon, authenticated using (true);
+create policy "read ingredients" on public.ingredients for select to anon, authenticated using (true);
+create policy "read products" on public.products for select to anon, authenticated using (true);
+create policy "read product_ingredients" on public.product_ingredients for select to anon, authenticated using (true);
