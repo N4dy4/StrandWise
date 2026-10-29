@@ -28,7 +28,7 @@ class ContentHubScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Discover'),
+          title: const Text('Learn'),
           bottom: const TabBar(
             tabs: [Tab(text: 'For you'), Tab(text: 'Products')],
           ),
@@ -63,11 +63,14 @@ class FeedTab extends StatelessWidget {
         }
         final items = ContentRanker.rank(snap.data!, profile);
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           children: [
-            Text('Picked for ${profile.curlPattern} hair',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            Text('Picked for your ${profile.curlPattern} hair',
+                style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 4),
+            const Text('Practical guidance from cited sources.',
+                style: TextStyle(color: AppColors.muted)),
+            const SizedBox(height: 12),
             for (final item in items) _ContentCard(item: item),
             const SizedBox(height: 8),
             const Text(medicalDisclaimer, style: TextStyle(fontSize: 12)),
@@ -85,21 +88,50 @@ class _ContentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: ListTile(
-        leading: Icon(
-          item.type == ContentType.video
-              ? Icons.play_circle_outline
-              : Icons.article_outlined,
-          color: AppColors.pink,
-        ),
-        title: Text(item.title),
-        subtitle: Text(
-          'Source: ${item.sourceName}'
-          '${item.isMedicalSensitive ? '\n$medicalDisclaimer' : ''}',
-        ),
-        isThreeLine: item.isMedicalSensitive,
-        trailing: const Icon(Icons.open_in_new, size: 18),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
         onTap: () => openSource(item.sourceUrl),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  color: AppColors.rose,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  item.type == ContentType.video
+                      ? Icons.play_arrow_rounded
+                      : Icons.article_outlined,
+                  color: AppColors.deepPink,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text('Source: ${item.sourceName}',
+                        style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                    if (item.isMedicalSensitive)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(medicalDisclaimer,
+                            style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.open_in_new, size: 18, color: AppColors.muted),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -126,7 +158,7 @@ class _ProductSearchTabState extends State<ProductSearchTab> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           TextField(

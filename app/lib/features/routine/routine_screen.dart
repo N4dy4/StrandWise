@@ -12,15 +12,36 @@ class RoutineScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final routines = RoutineEngine.build(profile);
     return Scaffold(
-      appBar: AppBar(title: const Text('Your routine')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
         children: [
-          Text('Expert-built for ${profile.curlPattern} hair',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
+          Text('Wash day', style: Theme.of(context).textTheme.headlineMedium),
+          Text('Expert-built for your ${profile.curlPattern} hair.',
+              style: const TextStyle(color: AppColors.muted)),
+          const SizedBox(height: 16),
+          Card(
+            color: AppColors.pink,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Your personalized routine',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Text(routines.first.name,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+                  const SizedBox(height: 4),
+                  Text(routines.first.frequency,
+                      style: const TextStyle(color: Colors.white70)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           for (final r in routines)
             Card(
+              margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -28,15 +49,14 @@ class RoutineScreen extends StatelessWidget {
                   children: [
                     Text(r.name,
                         style: Theme.of(context).textTheme.titleLarge),
-                    Text(r.frequency,
-                        style: const TextStyle(color: AppColors.deepPink)),
+                    Text(r.frequency, style: const TextStyle(color: AppColors.deepPink)),
                     const SizedBox(height: 8),
                     for (var i = 0; i < r.steps.length; i++)
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: CircleAvatar(
                           backgroundColor: AppColors.rose,
-                          child: Text('${i + 1}'),
+                          child: Text('${i + 1}', style: const TextStyle(color: AppColors.deepPink)),
                         ),
                         title: Text(r.steps[i].title),
                         subtitle: Text(r.steps[i].detail),
@@ -45,9 +65,12 @@ class RoutineScreen extends StatelessWidget {
                 ),
               ),
             ),
-          const Text(
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text(
             'General guidance, not medical advice. For hair loss or scalp conditions, see a doctor or dermatologist.',
-            style: TextStyle(fontSize: 12),
+            style: TextStyle(fontSize: 12, color: AppColors.muted),
+            ),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/profile_store.dart';
 import '../../models/hair_profile.dart';
+import '../../theme/app_theme.dart';
 
 const _curlPatterns = [
   '1A', '1B', '1C', '2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', //
@@ -110,18 +111,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  String get _subtitle => switch (_step) {
+        0 => 'This stays on your device and shapes your routine.',
+        1 => 'Low: water beads up. High: absorbs fast but dries fast.',
+        2 => 'This helps tailor product textures and wash-day steps.',
+        3 => 'Your scalp preferences help guide gentle care suggestions.',
+        _ => 'Choose as many as apply. You can update these anytime.',
+      };
+
   @override
   Widget build(BuildContext context) {
     final last = _step == _titles.length - 1;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Step ${_step + 1} of ${_titles.length}'),
+        title: Text('${_step + 1} of ${_titles.length}'),
         leading: _step > 0
             ? BackButton(onPressed: () => setState(() => _step--))
             : null,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -129,9 +138,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 value: (_step + 1) / _titles.length,
                 borderRadius: BorderRadius.circular(8)),
             const SizedBox(height: 24),
-            Text(_titles[_step],
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 16),
+            const SizedBox(height: 28),
+            Text(_titles[_step], style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 8),
+            Text(_subtitle, style: const TextStyle(color: AppColors.muted)),
+            const SizedBox(height: 24),
             Expanded(child: SingleChildScrollView(child: _body())),
             SizedBox(
               width: double.infinity,
