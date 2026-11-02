@@ -4,6 +4,7 @@ import '../../features/content/content_hub_screen.dart';
 import '../../features/routine/routine_screen.dart';
 import '../../models/hair_profile.dart';
 import '../profile/profile_screens.dart';
+import '../../widgets/mockup_bottom_navigation.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({
@@ -36,19 +37,12 @@ class _AppShellState extends State<AppShell> {
     ];
 
     return Scaffold(
-      body: SafeArea(child: pages[_selectedIndex]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Routine'),
-          NavigationDestination(
-              icon: Icon(Icons.play_circle_outline), label: 'Learn'),
-          NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
-          NavigationDestination(
-              icon: Icon(Icons.science_outlined), label: 'Ingredients'),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
+      body: SafeArea(
+        child: IndexedStack(index: _selectedIndex, children: pages),
+      ),
+      bottomNavigationBar: MockupBottomNavigation(
+        currentIndex: _selectedIndex,
+        onSelected: (index) => setState(() => _selectedIndex = index),
       ),
     );
   }

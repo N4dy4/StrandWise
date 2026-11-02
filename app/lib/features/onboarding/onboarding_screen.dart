@@ -4,8 +4,11 @@ import '../../data/profile_store.dart';
 import '../../models/hair_profile.dart';
 import '../../theme/app_theme.dart';
 
-const _curlPatterns = [
-  '1A', '1B', '1C', '2A', '2B', '2C', '3A', '3B', '3C', '4A', '4B', '4C', //
+const _hairPatternGroups = [
+  ('Straight', ['1A', '1B', '1C']),
+  ('Wavy', ['2A', '2B', '2C']),
+  ('Curly', ['3A', '3B', '3C']),
+  ('Coily', ['4A', '4B', '4C']),
 ];
 
 String _label(Enum e) => e.name[0].toUpperCase() + e.name.substring(1);
@@ -38,6 +41,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   bool get _canContinue => _step != 0 || _curl != null;
 
+  String? get _selectedHairPatternGroup {
+    for (final group in _hairPatternGroups) {
+      if (group.$2.contains(_curl)) return group.$1;
+    }
+    return null;
+  }
+
   Future<void> _next() async {
     if (_step < _titles.length - 1) {
       setState(() => _step++);
@@ -55,14 +65,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _choices<T extends Enum>(
-      List<T> values, T selected, ValueChanged<T> onPick,
-      {String? hint}) {
+    List<T> values,
+    T selected,
+    ValueChanged<T> onPick, {
+    String? hint,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (hint != null)
           Padding(
-              padding: const EdgeInsets.only(bottom: 12), child: Text(hint)),
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(hint),
+          ),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -82,42 +97,64 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _body() {
     switch (_step) {
       case 0:
-        return Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final c in _curlPatterns)
-            ChoiceChip(
-              label: Text(c),
-              selected: _curl == c,
-              onSelected: (_) => setState(() => _curl = c),
-            ),
-        ]);
+        return GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 1.35,
+          children: [
+            for (final group in _hairPatternGroups)
+              _HairPatternCard(
+                label: group.$1,
+                selected: _selectedHairPatternGroup == group.$1,
+                onTap: () => setState(() => _curl = group.$2.last),
+              ),
+          ],
+        );
       case 1:
-        return _choices(Porosity.values, _porosity, (v) => _porosity = v,
-            hint: 'Low: water beads up. High: absorbs fast but dries fast.');
+        return _choices(
+          Porosity.values,
+          _porosity,
+          (v) => _porosity = v,
+          hint: 'Low: water beads up. High: absorbs fast but dries fast.',
+        );
       case 2:
-        return _choices(Density.values, _density, (v) => _density = v,
-            hint: 'How much hair you have per square inch.');
+        return _choices(
+          Density.values,
+          _density,
+          (v) => _density = v,
+          hint: 'How much hair you have per square inch.',
+        );
       case 3:
         return _choices(ScalpType.values, _scalp, (v) => _scalp = v);
       default:
-        return Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final c in HairConcern.values)
-            FilterChip(
-              label: Text(c == HairConcern.hairLoss ? 'Hair loss' : _label(c)),
-              selected: _concerns.contains(c),
-              onSelected: (on) => setState(
-                  () => on ? _concerns.add(c) : _concerns.remove(c)),
-            ),
-        ]);
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final c in HairConcern.values)
+              FilterChip(
+                label: Text(
+                  c == HairConcern.hairLoss ? 'Hair loss' : _label(c),
+                ),
+                selected: _concerns.contains(c),
+                onSelected: (on) =>
+                    setState(() => on ? _concerns.add(c) : _concerns.remove(c)),
+              ),
+          ],
+        );
     }
   }
 
   String get _subtitle => switch (_step) {
-        0 => 'This stays on your device and shapes your routine.',
-        1 => 'Low: water beads up. High: absorbs fast but dries fast.',
-        2 => 'This helps tailor product textures and wash-day steps.',
-        3 => 'Your scalp preferences help guide gentle care suggestions.',
-        _ => 'Choose as many as apply. You can update these anytime.',
-      };
+    0 => 'This stays on your device and shapes your routine.',
+    1 => 'Low: water beads up. High: absorbs fast but dries fast.',
+    2 => 'This helps tailor product textures and wash-day steps.',
+    3 => 'Your scalp preferences help guide gentle care suggestions.',
+    _ => 'Choose as many as apply. You can update these anytime.',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -135,11 +172,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             LinearProgressIndicator(
-                value: (_step + 1) / _titles.length,
-                borderRadius: BorderRadius.circular(8)),
+              value: (_step + 1) / _titles.length,
+              borderRadius: BorderRadius.circular(8),
+            ),
             const SizedBox(height: 24),
             const SizedBox(height: 28),
-            Text(_titles[_step], style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              _titles[_step],
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: 8),
             Text(_subtitle, style: const TextStyle(color: AppColors.muted)),
             const SizedBox(height: 24),
@@ -156,4 +197,49 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+}
+
+class _HairPatternCard extends StatelessWidget {
+  const _HairPatternCard({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    selected: selected,
+    label: label,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(AppTheme.cornerRadius),
+      onTap: onTap,
+      child: Ink(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.rose : AppColors.cream,
+          borderRadius: BorderRadius.circular(AppTheme.cornerRadius),
+          border: Border.all(
+            color: selected ? AppColors.pink : AppColors.border,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(
+              Icons.water_drop_outlined,
+              color: selected ? AppColors.pink : AppColors.muted,
+            ),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ],
+        ),
+      ),
+    ),
+  );
 }

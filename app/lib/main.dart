@@ -49,53 +49,58 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    ProfileStore.load().then((p) {
-      if (mounted) setState(() => profile = p);
-    }).catchError((_) {});
+    ProfileStore.load()
+        .then((p) {
+          if (mounted) setState(() => profile = p);
+        })
+        .catchError((_) {});
   }
 
-  void _open(BuildContext context, Widget screen) => Navigator.of(context)
-      .push(MaterialPageRoute<void>(builder: (_) => screen));
+  void _open(BuildContext context, Widget screen) =>
+      Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => screen));
 
   void _editProfile(BuildContext context) => _open(
-        context,
-        OnboardingScreen(
-          initial: profile,
-          onDone: (p) {
-            setState(() => profile = p);
-            Navigator.of(context).pop();
-          },
-        ),
-      );
+    context,
+    OnboardingScreen(
+      initial: profile,
+      onDone: (p) {
+        setState(() => profile = p);
+        Navigator.of(context).pop();
+      },
+    ),
+  );
 
   void _beginOnboarding(BuildContext context) => _open(
-        context,
-        DisclaimerScreen(
-          onDone: (profile) => setState(() => this.profile = profile),
-        ),
-      );
+    context,
+    DisclaimerScreen(
+      onDone: (profile) => setState(() => this.profile = profile),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: profile == null
-              ? Column(
+      body: profile == null
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
                   children: [
                     const Spacer(),
                     const StrandWiseLogo(size: 104),
                     const SizedBox(height: 24),
-                    Text('Welcome to StrandWise', style: textTheme.headlineLarge),
+                    Text('StrandWise', style: textTheme.headlineLarge),
                     const SizedBox(height: 12),
                     Text(
                       'Hair care that learns your hair, backed by real research.',
-                      style: TextStyle(color: AppColors.muted),
+                      style: const TextStyle(color: AppColors.muted),
                       textAlign: TextAlign.center,
                     ),
                     const Spacer(),
+                    const _PageIndicator(),
+                    const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
@@ -103,21 +108,50 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Text('Get started'),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      SupabaseConfig.isConfigured
-                          ? 'Your account is connected.'
-                          : 'Your profile is stored on this device.',
-                      style: const TextStyle(color: AppColors.muted),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('I already have an account'),
                     ),
                   ],
-                )
-              : AppShell(
-                  profile: profile!,
-                  onEditProfile: () => _editProfile(context),
                 ),
-        ),
-      ),
+              ),
+            )
+          : AppShell(
+              profile: profile!,
+              onEditProfile: () => _editProfile(context),
+            ),
     );
   }
+}
+
+class _PageIndicator extends StatelessWidget {
+  const _PageIndicator();
+
+  @override
+  Widget build(BuildContext context) => const Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      _IndicatorDot(active: true),
+      SizedBox(width: 6),
+      _IndicatorDot(),
+      SizedBox(width: 6),
+      _IndicatorDot(),
+    ],
+  );
+}
+
+class _IndicatorDot extends StatelessWidget {
+  const _IndicatorDot({this.active = false});
+
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 7,
+    width: active ? 24 : 7,
+    decoration: BoxDecoration(
+      color: active ? AppColors.pink : AppColors.rose,
+      borderRadius: BorderRadius.circular(4),
+    ),
+  );
 }
