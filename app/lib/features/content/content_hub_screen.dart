@@ -29,8 +29,16 @@ class ContentHubScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Learn'),
+          centerTitle: false,
+          toolbarHeight: 72,
+          titleTextStyle: Theme.of(context).textTheme.headlineMedium,
           bottom: const TabBar(
-            tabs: [Tab(text: 'For you'), Tab(text: 'Products')],
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            tabs: [
+              Tab(text: 'For you'),
+              Tab(text: 'Products'),
+            ],
           ),
         ),
         body: TabBarView(
@@ -65,11 +73,15 @@ class FeedTab extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           children: [
-            Text('Picked for your ${profile.curlPattern} hair',
-                style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'Picked for your ${profile.curlPattern} hair',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 4),
-            const Text('Practical guidance from cited sources.',
-                style: TextStyle(color: AppColors.muted)),
+            const Text(
+              'Practical guidance from cited sources.',
+              style: TextStyle(color: AppColors.muted),
+            ),
             const SizedBox(height: 12),
             for (final item in items) _ContentCard(item: item),
             const SizedBox(height: 8),
@@ -115,15 +127,28 @@ class _ContentCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                      item.title,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 4),
-                    Text('Source: ${item.sourceName}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                    Text(
+                      'Source: ${item.sourceName}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted,
+                      ),
+                    ),
                     if (item.isMedicalSensitive)
                       const Padding(
                         padding: EdgeInsets.only(top: 4),
-                        child: Text(medicalDisclaimer,
-                            style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                        child: Text(
+                          medicalDisclaimer,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.muted,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -179,11 +204,15 @@ class _ProductSearchTabState extends State<ProductSearchTab> {
                 if (!snap.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final matches = snap.data!.where((p) =>
-                    _query.isEmpty ||
-                    p.name.toLowerCase().contains(_query) ||
-                    p.brand.toLowerCase().contains(_query) ||
-                    p.ingredients.any((i) => i.toLowerCase().contains(_query)));
+                final matches = snap.data!.where(
+                  (p) =>
+                      _query.isEmpty ||
+                      p.name.toLowerCase().contains(_query) ||
+                      p.brand.toLowerCase().contains(_query) ||
+                      p.ingredients.any(
+                        (i) => i.toLowerCase().contains(_query),
+                      ),
+                );
                 return ListView(
                   children: [for (final p in matches) _productCard(p)],
                 );

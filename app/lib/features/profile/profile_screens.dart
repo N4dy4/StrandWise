@@ -40,10 +40,13 @@ class SearchSourcesScreen extends StatelessWidget {
                   children: [
                     Icon(Icons.auto_awesome, color: AppColors.pink, size: 16),
                     SizedBox(width: 6),
-                    Text('Summary',
-                        style: TextStyle(
-                            color: AppColors.deepPink,
-                            fontWeight: FontWeight.w600)),
+                    Text(
+                      'Summary',
+                      style: TextStyle(
+                        color: AppColors.deepPink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 10),
@@ -58,12 +61,15 @@ class SearchSourcesScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Text('SOURCES',
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.muted,
-                letterSpacing: 1)),
+        const Text(
+          'SOURCES',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.muted,
+            letterSpacing: 1,
+          ),
+        ),
         const SizedBox(height: 8),
         for (final source in _sources)
           Card(
@@ -106,11 +112,15 @@ class IngredientCheckScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
       children: [
-        Text('Ingredient check',
-            style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          'Ingredient check',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 4),
-        const Text('Hydrating Curl Cream',
-            style: TextStyle(color: AppColors.muted)),
+        const Text(
+          'Hydrating Curl Cream',
+          style: TextStyle(color: AppColors.muted),
+        ),
         const SizedBox(height: 16),
         Card(
           child: Padding(
@@ -129,8 +139,7 @@ class IngredientCheckScreen extends StatelessWidget {
                         backgroundColor: AppColors.rose,
                         color: AppColors.pink,
                       ),
-                      Text('72',
-                          style: Theme.of(context).textTheme.titleLarge),
+                      Text('72', style: Theme.of(context).textTheme.titleLarge),
                     ],
                   ),
                 ),
@@ -139,12 +148,15 @@ class IngredientCheckScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Good match',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        'Good match',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       SizedBox(height: 4),
-                      Text('Fits your profile, but contains one silicone.',
-                          style:
-                              TextStyle(fontSize: 12, color: AppColors.muted)),
+                      Text(
+                        'Fits your profile, but contains one silicone.',
+                        style: TextStyle(fontSize: 12, color: AppColors.muted),
+                      ),
                     ],
                   ),
                 ),
@@ -164,18 +176,27 @@ class IngredientCheckScreen extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(row.$1,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
+                        child: Text(
+                          row.$1,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      Text(row.$3,
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.muted)),
+                      Text(
+                        row.$3,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.muted,
+                        ),
+                      ),
                     ],
                   ),
-                  Text(row.$2,
-                      style:
-                          const TextStyle(fontSize: 12, color: AppColors.muted)),
+                  Text(
+                    row.$2,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   LinearProgressIndicator(
                     value: row.$4,
@@ -203,19 +224,50 @@ class ProfileHubScreen extends StatelessWidget {
   final HairProfile profile;
   final VoidCallback onEditProfile;
 
-  void _open(BuildContext context, Widget page) => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => page),
-      );
+  void _open(BuildContext context, Widget page) =>
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
       children: [
-        Text('Your space', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 4),
-        Text('${profile.curlPattern} hair profile',
-            style: const TextStyle(color: AppColors.muted)),
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: AppColors.rose,
+              child: Text(
+                profile.curlPattern,
+                style: const TextStyle(
+                  color: AppColors.deepPink,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your space',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  Text(
+                    '${profile.curlPattern} hair profile',
+                    style: const TextStyle(color: AppColors.muted),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Edit hair profile',
+              onPressed: onEditProfile,
+              icon: const Icon(Icons.tune, color: AppColors.deepPink),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         Card(
           color: AppColors.pink,
@@ -226,14 +278,19 @@ class ProfileHubScreen extends StatelessWidget {
               children: [
                 Icon(Icons.lock_outline, color: Colors.white),
                 SizedBox(height: 10),
-                Text('Private by default',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18)),
+                Text(
+                  'Private by default',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
                 SizedBox(height: 4),
-                Text('Nothing leaves your phone unless you choose to.',
-                    style: TextStyle(color: Colors.white70)),
+                Text(
+                  'Nothing leaves your phone unless you choose to.',
+                  style: TextStyle(color: Colors.white70),
+                ),
               ],
             ),
           ),
@@ -283,18 +340,18 @@ class _ProfileLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: AppColors.rose,
-            child: Icon(icon, color: AppColors.deepPink),
-          ),
-          title: Text(title),
-          subtitle: Text(subtitle),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: onTap,
-        ),
-      );
+    margin: const EdgeInsets.only(bottom: 8),
+    child: ListTile(
+      leading: CircleAvatar(
+        backgroundColor: AppColors.rose,
+        child: Icon(icon, color: AppColors.deepPink),
+      ),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    ),
+  );
 }
 
 class ProgressScreen extends StatelessWidget {
@@ -312,8 +369,10 @@ class ProgressScreen extends StatelessWidget {
             children: [
               Icon(Icons.lock_outline, size: 14, color: AppColors.muted),
               SizedBox(width: 5),
-              Text('Photos are stored only on this device',
-                  style: TextStyle(fontSize: 12, color: AppColors.muted)),
+              Text(
+                'Photos are stored only on this device',
+                style: TextStyle(fontSize: 12, color: AppColors.muted),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -331,14 +390,21 @@ class ProgressScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: const Center(
-                          child: Icon(Icons.person_outline,
-                              color: AppColors.deepPink, size: 30),
+                          child: Icon(
+                            Icons.person_outline,
+                            color: AppColors.deepPink,
+                            size: 30,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(label,
-                          style: const TextStyle(
-                              fontSize: 11, color: AppColors.muted)),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.muted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -351,8 +417,10 @@ class ProgressScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Moisture score',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const Text(
+                    'Moisture score',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   SizedBox(
                     height: 100,
                     child: Row(
@@ -368,16 +436,18 @@ class ProgressScreen extends StatelessWidget {
                                     ? AppColors.pink
                                     : AppColors.rose,
                                 borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(8)),
+                                  top: Radius.circular(8),
+                                ),
                               ),
                             ),
                           ),
                       ],
                     ),
                   ),
-                  const Text('Up 42% since you started',
-                      style:
-                          TextStyle(fontSize: 12, color: AppColors.muted)),
+                  const Text(
+                    'Up 42% since you started',
+                    style: TextStyle(fontSize: 12, color: AppColors.muted),
+                  ),
                 ],
               ),
             ),
@@ -419,7 +489,9 @@ class OfflineSyncScreen extends StatelessWidget {
                 child: Icon(Icons.cloud_off_outlined, color: AppColors.pink),
               ),
               title: Text('You are offline'),
-              subtitle: Text('Everything you need for your routine still works.'),
+              subtitle: Text(
+                'Everything you need for your routine still works.',
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -476,14 +548,19 @@ class PrivacyScreen extends StatelessWidget {
                     child: Icon(Icons.lock_outline, color: Colors.white),
                   ),
                   SizedBox(height: 12),
-                  Text('Private by default',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18)),
+                  Text(
+                    'Private by default',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                    ),
+                  ),
                   SizedBox(height: 4),
-                  Text('Nothing leaves your phone unless you choose to.',
-                      style: TextStyle(color: Colors.white70)),
+                  Text(
+                    'Nothing leaves your phone unless you choose to.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ],
               ),
             ),
@@ -499,8 +576,11 @@ class PrivacyScreen extends StatelessWidget {
                 ),
                 title: Text(row.$1),
                 subtitle: Text(row.$2),
-                trailing: const Icon(Icons.toggle_on,
-                    color: AppColors.pink, size: 34),
+                trailing: const Icon(
+                  Icons.toggle_on,
+                  color: AppColors.pink,
+                  size: 34,
+                ),
               ),
             ),
           Card(
