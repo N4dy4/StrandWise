@@ -21,8 +21,9 @@ abstract final class ContentRanker {
   /// Drops items for other curl patterns, then sorts by relevance
   /// (stable for ties).
   static List<ContentItem> rank(List<ContentItem> items, HairProfile profile) {
-    final eligible =
-        items.where((i) => _matchesCurl(i, profile.curlPattern)).toList();
+    final eligible = items
+        .where((i) => _matchesCurl(i, profile.curlPattern))
+        .toList();
     final order = {for (var k = 0; k < eligible.length; k++) eligible[k]: k};
     eligible.sort((a, b) {
       final c = score(b, profile).compareTo(score(a, profile));

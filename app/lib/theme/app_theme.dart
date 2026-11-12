@@ -67,10 +67,8 @@ abstract final class AppTheme {
       ),
     );
 
-    final body = GoogleFonts.interTextTheme(base.textTheme).apply(
-      bodyColor: AppColors.ink,
-      displayColor: AppColors.ink,
-    );
+    final body = GoogleFonts.interTextTheme(base.textTheme)
+        .apply(bodyColor: AppColors.ink, displayColor: AppColors.ink);
     final headline = GoogleFonts.fraunces(
       fontWeight: FontWeight.w500,
       letterSpacing: -0.5,

@@ -15,7 +15,7 @@ class MockupBottomNavigation extends StatelessWidget {
   static const _destinations = [
     (Icons.home_outlined, 'Routine'),
     (Icons.play_circle_outline, 'Learn'),
-    (Icons.search, 'Search'),
+    (Icons.calendar_month_outlined, 'Calendar'),
     (Icons.science_outlined, 'Ingredients'),
     (Icons.person_outline, 'Profile'),
   ];

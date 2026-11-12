@@ -31,16 +31,16 @@ class ContentItem {
       concerns.contains(HairConcern.dandruff);
 
   factory ContentItem.fromJson(Map<String, dynamic> json) => ContentItem(
-        id: json['id'] as String,
-        type: ContentType.values.byName(json['type'] as String),
-        title: json['title'] as String,
-        sourceName: json['source_name'] as String,
-        sourceUrl: json['source_url'] as String,
-        curlPatterns: ((json['curl_patterns'] as List?) ?? const [])
-            .cast<String>()
-            .toSet(),
-        concerns: ((json['concerns'] as List?) ?? const [])
-            .map((c) => HairConcern.values.byName(c as String))
-            .toSet(),
-      );
+    id: json['id'] as String,
+    type: ContentType.values.byName(json['type'] as String),
+    title: json['title'] as String,
+    sourceName: json['source_name'] as String,
+    sourceUrl: json['source_url'] as String,
+    curlPatterns: ((json['curl_patterns'] as List?) ?? const [])
+        .cast<String>()
+        .toSet(),
+    concerns: ((json['concerns'] as List?) ?? const [])
+        .map((c) => HairConcern.values.byName(c as String))
+        .toSet(),
+  );
 }

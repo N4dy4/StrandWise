@@ -26,22 +26,22 @@ class HairProfile {
   final Set<HairConcern> concerns;
 
   Map<String, dynamic> toJson() => {
-        'curlPattern': curlPattern,
-        'porosity': porosity.name,
-        'density': density.name,
-        'scalp': scalp.name,
-        'concerns': concerns.map((c) => c.name).toList(),
-      };
+    'curlPattern': curlPattern,
+    'porosity': porosity.name,
+    'density': density.name,
+    'scalp': scalp.name,
+    'concerns': concerns.map((c) => c.name).toList(),
+  };
 
   factory HairProfile.fromJson(Map<String, dynamic> j) => HairProfile(
-        curlPattern: j['curlPattern'] as String,
-        porosity: Porosity.values.byName(j['porosity'] as String),
-        density: Density.values.byName(j['density'] as String),
-        scalp: ScalpType.values.byName(j['scalp'] as String),
-        concerns: (j['concerns'] as List)
-            .map((c) => HairConcern.values.byName(c as String))
-            .toSet(),
-      );
+    curlPattern: j['curlPattern'] as String,
+    porosity: Porosity.values.byName(j['porosity'] as String),
+    density: Density.values.byName(j['density'] as String),
+    scalp: ScalpType.values.byName(j['scalp'] as String),
+    concerns: (j['concerns'] as List)
+        .map((c) => HairConcern.values.byName(c as String))
+        .toSet(),
+  );
 
   String encode() => jsonEncode(toJson());
   static HairProfile decode(String s) =>

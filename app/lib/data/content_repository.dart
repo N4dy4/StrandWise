@@ -26,11 +26,16 @@ class SupabaseContentRepository implements ContentRepository {
   Future<List<Product>> products() async {
     final rows = await Supabase.instance.client
         .from('products')
-        .select('id, name, brand, source_url, product_ingredients(position, ingredients(name))');
+        .select(
+          'id, name, brand, source_url, product_ingredients(position, ingredients(name))',
+        );
     return rows.map((r) {
-      final links = ((r['product_ingredients'] as List?) ?? const [])
-          .cast<Map<String, dynamic>>()
-        ..sort((a, b) => (a['position'] as int).compareTo(b['position'] as int));
+      final links =
+          ((r['product_ingredients'] as List?) ?? const [])
+              .cast<Map<String, dynamic>>()
+            ..sort(
+              (a, b) => (a['position'] as int).compareTo(b['position'] as int),
+            );
       return Product(
         id: r['id'] as String,
         name: r['name'] as String,

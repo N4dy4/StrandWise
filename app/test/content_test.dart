@@ -5,17 +5,19 @@ import 'package:strandwise/models/product.dart';
 import 'package:strandwise/services/content_ranker.dart';
 import 'package:strandwise/services/ingredient_flagger.dart';
 
-ContentItem item(String id,
-        {Set<String> curl = const {}, Set<HairConcern> concerns = const {}}) =>
-    ContentItem(
-      id: id,
-      type: ContentType.article,
-      title: id,
-      sourceName: 's',
-      sourceUrl: 'https://example.com',
-      curlPatterns: curl,
-      concerns: concerns,
-    );
+ContentItem item(
+  String id, {
+  Set<String> curl = const {},
+  Set<HairConcern> concerns = const {},
+}) => ContentItem(
+  id: id,
+  type: ContentType.article,
+  title: id,
+  sourceName: 's',
+  sourceUrl: 'https://example.com',
+  curlPatterns: curl,
+  concerns: concerns,
+);
 
 void main() {
   group('IngredientFlagger', () {
@@ -33,15 +35,23 @@ void main() {
     });
 
     test('does not flag fatty alcohols or magnesium sulfate', () {
-      expect(IngredientFlagger.flag(
-          ['Cetyl Alcohol', 'Cetearyl Alcohol', 'Magnesium Sulfate', 'Glycerin']),
-          isEmpty);
+      expect(
+        IngredientFlagger.flag([
+          'Cetyl Alcohol',
+          'Cetearyl Alcohol',
+          'Magnesium Sulfate',
+          'Glycerin',
+        ]),
+        isEmpty,
+      );
     });
   });
 
   group('ContentRanker', () {
     const profile = HairProfile(
-        curlPattern: '4B', concerns: {HairConcern.breakage});
+      curlPattern: '4B',
+      concerns: {HairConcern.breakage},
+    );
 
     test('excludes other curl patterns and ranks by match', () {
       final ranked = ContentRanker.rank([

@@ -25,7 +25,7 @@ class ContentHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = repository ?? ContentRepository.create();
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Learn'),
@@ -37,6 +37,7 @@ class ContentHubScreen extends StatelessWidget {
             dividerColor: Colors.transparent,
             tabs: [
               Tab(text: 'For you'),
+              Tab(text: 'Ask anything'),
               Tab(text: 'Products'),
             ],
           ),
@@ -44,12 +45,75 @@ class ContentHubScreen extends StatelessWidget {
         body: TabBarView(
           children: [
             FeedTab(profile: profile, repository: repo),
+            const AskAnythingTab(),
             ProductSearchTab(repository: repo),
           ],
         ),
       ),
     );
   }
+}
+
+class AskAnythingTab extends StatelessWidget {
+  const AskAnythingTab({super.key});
+
+  static const _sources = [
+    ('American Academy of Dermatology', 'https://www.aad.org/'),
+    ('PubMed', 'https://pubmed.ncbi.nlm.nih.gov/'),
+    ('NaturallyCurly', 'https://www.naturallycurly.com/'),
+  ];
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      const TextField(
+        decoration: InputDecoration(
+          hintText: 'Is rice water good for my hair?',
+          prefixIcon: Icon(Icons.search),
+        ),
+      ),
+      const SizedBox(height: 16),
+      const Card(
+        child: Padding(
+          padding: EdgeInsets.all(18),
+          child: Text(
+            'Rice water may add temporary strength, but evidence is limited. '
+            'Overuse can leave some hair feeling dry or stiff. Try a patch '
+            'test and stop if your hair becomes brittle.',
+            style: TextStyle(height: 1.45),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      const Text(
+        'SOURCES',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppColors.muted,
+          letterSpacing: 1,
+        ),
+      ),
+      const SizedBox(height: 8),
+      for (final source in _sources)
+        Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            leading: const CircleAvatar(
+              backgroundColor: AppColors.pink,
+              child: Icon(Icons.link, color: Colors.white, size: 18),
+            ),
+            title: Text(source.$1),
+            subtitle: Text(Uri.parse(source.$2).host),
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: () => openSource(source.$2),
+          ),
+        ),
+      const SizedBox(height: 8),
+      const Text(medicalDisclaimer, style: TextStyle(fontSize: 12)),
+    ],
+  );
 }
 
 class FeedTab extends StatelessWidget {

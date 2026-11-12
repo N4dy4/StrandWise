@@ -19,9 +19,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
   void _continue() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => OnboardingScreen(
-          onDone: widget.onDone,
-        ),
+        builder: (_) => OnboardingScreen(onDone: widget.onDone),
       ),
     );
   }
@@ -47,12 +45,16 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                           color: AppColors.rose,
                           shape: BoxShape.circle,
                         ),
-                        child:
-                            const Icon(Icons.info_outline, color: AppColors.pink),
+                        child: const Icon(
+                          Icons.info_outline,
+                          color: AppColors.pink,
+                        ),
                       ),
                       const SizedBox(height: 24),
-                      Text('Before we begin',
-                          style: Theme.of(context).textTheme.headlineMedium),
+                      Text(
+                        'Before we begin',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
                       const SizedBox(height: 16),
                       Card(
                         child: const Padding(
