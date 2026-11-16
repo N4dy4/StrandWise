@@ -139,6 +139,7 @@ class LocalContentRepository implements ContentRepository {
       name: 'Avocado Butter & Manuka Honey Deep Conditioner',
       brand: 'SheaMoisture',
       sourceUrl: 'https://www.sheamoisture.com/us/en/p/avocado-butter-%26-manuka-honey-deep-conditioner.html/00764302016748',
+      curlPatterns: ['4'],
       ingredients: [
         'Water',
         'Cetearyl Alcohol',

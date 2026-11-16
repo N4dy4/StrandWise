@@ -41,9 +41,12 @@ Phase 0 needs no tables yet. Phase 1 introduces `users` / `hair_profiles` etc. â
 
 ## 6. Content APIs (Phase 2)
 
-`supabase/functions/sync-content` pulls videos (YouTube Data API) and articles (Tavily) into `content_items` with `source_url`. Keys live in Supabase secrets, never in the app or repo.
+`supabase/functions/sync-content` pulls videos (YouTube Data API), articles, and
+official brand products (Tavily) with permanent `source_url` citations. Product
+sync includes Camille Rose, SheaMoisture (types 1-4), Ecoslay, and The Doux.
+Keys live in Supabase secrets, never in the app or repo.
 
-1. Run `supabase/migrations/0004_content_source_url_unique.sql` in the SQL Editor.
+1. Run migrations through `0006_product_curl_patterns.sql` in the SQL Editor.
 2. Get keys: YouTube Data API v3 (Google Cloud Console) and Tavily (https://tavily.com). Either one works alone.
 3. Set secrets and deploy (needs the Supabase CLI, `brew install supabase/tap/supabase`):
    ```sh
@@ -54,5 +57,5 @@ Phase 0 needs no tables yet. Phase 1 introduces `users` / `hair_profiles` etc. â
    ```sh
    curl -X POST https://<project-ref>.supabase.co/functions/v1/sync-content \
      -H "x-sync-secret: <SYNC_SECRET>" -H "Content-Type: application/json" \
-     -d '{"curlPatterns":["3","4"],"concerns":["frizz","breakage"]}'
+     -d '{"curlPatterns":["3","4"],"concerns":["frizz","breakage"],"includeProducts":true}'
    ```

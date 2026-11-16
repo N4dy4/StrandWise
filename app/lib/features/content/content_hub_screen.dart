@@ -298,6 +298,8 @@ class _ProductSearchTabState extends State<ProductSearchTab> {
           child: Wrap(
             spacing: 6,
             children: [
+              for (final pattern in p.curlPatterns)
+                Chip(label: Text('Type $pattern hair')),
               if (flags.isEmpty)
                 const Chip(label: Text('No flagged ingredients'))
               else

@@ -5,7 +5,7 @@
 // (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided automatically.)
 //
 // Call: POST with header `x-sync-secret: <SYNC_SECRET>` and optional JSON body
-// { "curlPatterns": ["3B"], "concerns": ["frizz"] }.
+// { "curlPatterns": ["3B"], "concerns": ["frizz"], "includeProducts": true }.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const CONCERNS = ["frizz", "breakage", "dandruff", "dryness", "hairLoss"];
@@ -17,6 +17,15 @@ const CONCERN_TERMS: Record<string, string> = {
   hairLoss: "hair loss",
 };
 const DEFAULT_PATTERNS = ["2", "3", "4"]; // curl families
+const PRODUCT_SOURCES = [
+  { brand: "Camille Rose", domain: "camillerose.com", curlPatterns: [] },
+  { brand: "SheaMoisture", domain: "sheamoisture.com", curlPatterns: ["1"] },
+  { brand: "SheaMoisture", domain: "sheamoisture.com", curlPatterns: ["2"] },
+  { brand: "SheaMoisture", domain: "sheamoisture.com", curlPatterns: ["3"] },
+  { brand: "SheaMoisture", domain: "sheamoisture.com", curlPatterns: ["4"] },
+  { brand: "Ecoslay", domain: "ecoslay.com", curlPatterns: [] },
+  { brand: "The Doux", domain: "thedoux.com", curlPatterns: [] },
+] as const;
 
 interface Row {
   type: "video" | "article";
@@ -25,6 +34,13 @@ interface Row {
   source_url: string;
   curl_patterns: string[];
   concerns: string[];
+}
+
+interface ProductRow {
+  name: string;
+  brand: string;
+  source_url: string;
+  curl_patterns: string[];
 }
 
 function buildQueries(patterns: string[], concerns: string[]) {
@@ -83,6 +99,45 @@ async function tavily(q: string, key: string): Promise<Row[] | null> {
   }));
 }
 
+async function tavilyProducts(
+  source: (typeof PRODUCT_SOURCES)[number],
+  key: string,
+): Promise<ProductRow[] | null> {
+  const type = source.curlPatterns[0];
+  const query = type
+    ? `${source.brand} type ${type} hair products`
+    : `${source.brand} hair products`;
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      query,
+      include_domains: [source.domain],
+      max_results: 10,
+      search_depth: "advanced",
+    }),
+  });
+  if (!res.ok) return null;
+
+  const json = await res.json();
+  return (json.results ?? []).flatMap((r: { title?: string; url?: string }) => {
+    if (!r.title || !r.url) return [];
+    try {
+      if (new URL(r.url).hostname.replace(/^www\./, "") !== source.domain) {
+        return [];
+      }
+    } catch {
+      return [];
+    }
+    return [{
+      name: r.title,
+      brand: source.brand,
+      source_url: r.url,
+      curl_patterns: [...source.curlPatterns],
+    }];
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.headers.get("x-sync-secret") !== Deno.env.get("SYNC_SECRET")) {
     return new Response("Unauthorized", { status: 401 });
@@ -98,6 +153,7 @@ Deno.serve(async (req) => {
   const concerns: string[] = (body.concerns ?? CONCERNS).filter((c: string) =>
     CONCERNS.includes(c)
   );
+  const includeProducts = body.includeProducts === true;
 
   const byUrl = new Map<string, Row>();
   const errors: string[] = [];
@@ -135,5 +191,41 @@ Deno.serve(async (req) => {
     if (error) return new Response(error.message, { status: 500 });
   }
 
-  return Response.json({ upserted: rows.length, errors });
+  const productsByUrl = new Map<string, ProductRow>();
+  if (includeProducts && tvKey) {
+    for (const source of PRODUCT_SOURCES) {
+      const products = await tavilyProducts(source, tvKey).catch(() => null);
+      if (!products) {
+        errors.push(`${source.brand} products failed`);
+        continue;
+      }
+      for (const product of products) {
+        const existing = productsByUrl.get(product.source_url);
+        if (existing) {
+          existing.curl_patterns = [
+            ...new Set([...existing.curl_patterns, ...product.curl_patterns]),
+          ];
+        } else {
+          productsByUrl.set(product.source_url, product);
+        }
+      }
+    }
+  }
+  const products = [...productsByUrl.values()];
+  if (products.length > 0) {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { error } = await supabase
+      .from("products")
+      .upsert(products, { onConflict: "source_url" });
+    if (error) return new Response(error.message, { status: 500 });
+  }
+
+  return Response.json({
+    contentUpserted: rows.length,
+    productsUpserted: products.length,
+    errors,
+  });
 });

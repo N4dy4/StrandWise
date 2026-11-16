@@ -27,7 +27,7 @@ class SupabaseContentRepository implements ContentRepository {
     final rows = await Supabase.instance.client
         .from('products')
         .select(
-          'id, name, brand, source_url, product_ingredients(position, ingredients(name))',
+          'id, name, brand, source_url, curl_patterns, product_ingredients(position, ingredients(name))',
         );
     return rows.map((r) {
       final links =
@@ -41,6 +41,9 @@ class SupabaseContentRepository implements ContentRepository {
         name: r['name'] as String,
         brand: r['brand'] as String,
         sourceUrl: r['source_url'] as String,
+        curlPatterns: List<String>.from(
+          r['curl_patterns'] as List? ?? const [],
+        ),
         ingredients: [
           for (final l in links) (l['ingredients'] as Map)['name'] as String,
         ],
