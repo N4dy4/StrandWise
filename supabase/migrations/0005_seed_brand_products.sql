@@ -1,8 +1,19 @@
 -- Curated official product pages collected with Tavily on 2026-10-30.
 -- Source URLs are retained as permanent citations (R2).
 
-alter table public.products
-  add constraint products_source_url_key unique (source_url);
+-- The 0003 sample products share one placeholder URL, which would violate the
+-- unique constraint below. They are replaced by real cited products (R2).
+delete from public.products where source_url = 'https://www.example.com/';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'products_source_url_key'
+  ) then
+    alter table public.products
+      add constraint products_source_url_key unique (source_url);
+  end if;
+end $$;
 
 insert into public.products (name, brand, source_url) values
   (

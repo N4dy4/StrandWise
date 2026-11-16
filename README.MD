@@ -25,6 +25,26 @@ flutter run \
   --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
+### Run with Supabase automatically
+
+Put your credentials in the gitignored `.env` at the repo root (see `.env.example`):
+
+```sh
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+Then add this one line to `~/.zshrc` (use your actual repo path) and open a new terminal:
+
+```sh
+source "/path/to/hair app/scripts/flutter-supabase.sh"
+```
+
+From then on, `flutter run` anywhere inside this repo automatically adds the
+`--dart-define` flags from `.env`; extra arguments (e.g. `-d chrome`) still work.
+If the keys are missing it falls back to local mode with a warning. Other
+`flutter` commands and other projects are unaffected.
+
 ## Checks
 
 ```sh

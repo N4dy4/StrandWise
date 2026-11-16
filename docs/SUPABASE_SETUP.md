@@ -43,7 +43,9 @@ Phase 0 needs no tables yet. Phase 1 introduces `users` / `hair_profiles` etc. â
 
 `supabase/functions/sync-content` pulls videos (YouTube Data API), articles, and
 official brand products (Tavily) with permanent `source_url` citations. Product
-sync includes Camille Rose, SheaMoisture (types 1-4), Ecoslay, and The Doux.
+sync includes Camille Rose, SheaMoisture (types 1-4), Ecoslay, and The Doux, and
+extracts each page's ingredient list when one can be parsed (so products can be
+flagged); pages whose ingredients can't be parsed are saved without them.
 Keys live in Supabase secrets, never in the app or repo.
 
 1. Run migrations through `0006_product_curl_patterns.sql` in the SQL Editor.

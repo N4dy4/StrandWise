@@ -7,6 +7,7 @@ class Product {
     required this.brand,
     required this.ingredients,
     required this.sourceUrl,
+    this.description = '',
     this.curlPatterns = const [],
   }) : assert(sourceUrl != '');
 
@@ -19,6 +20,9 @@ class Product {
 
   /// Citation for the ingredient list (R2).
   final String sourceUrl;
+
+  /// Short blurb from the brand's product page; empty when unavailable.
+  final String description;
 
   /// Curl families this product is explicitly intended for.
   final List<String> curlPatterns;

@@ -41,6 +41,62 @@ interface ProductRow {
   brand: string;
   source_url: string;
   curl_patterns: string[];
+  ingredients: string[];
+  description: string;
+}
+
+const PRODUCT_PATH = /\/(products?|p)\//i;
+// Collection pages, bundles and sample sets are not single products.
+const NON_PRODUCT_TITLE = /\b(bundle|set|kit|collection|shop all|hair products)\b/i;
+const PRODUCT_CATEGORIES = [
+  "shampoo",
+  "conditioner",
+  "leave-in conditioner",
+  "curl styling gel cream",
+];
+
+// Pulls the INCI list out of a product page's text: the text after an
+// "Ingredients" label up to the next blank line, split on top-level commas.
+function parseIngredients(text: string): string[] {
+  const m = text.match(/ingredients?\s*:?\s*\n?([^\n]{20,2000}(?:\n(?!\s*\n)[^\n]+)*)/i);
+  if (!m) return [];
+  const list: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of m[1].replace(/\s+/g, " ")) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth = Math.max(0, depth - 1);
+    if (ch === "," && depth === 0) {
+      list.push(cur);
+      cur = "";
+    } else cur += ch;
+  }
+  list.push(cur);
+  const seen = new Set<string>();
+  const out = list
+    .map((i) => i.trim().replace(/[.*†]+$/, "").trim())
+    .filter((i) => i.length > 1 && i.length <= 80)
+    .filter((i) => !seen.has(i.toLowerCase()) && seen.add(i.toLowerCase()));
+  return out.length >= 4 ? out : [];
+}
+
+// Tavily's page snippet, trimmed to a short plain-text blurb for the product card.
+function cleanDescription(text: string): string {
+  const t = text
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[#*_>`]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (t.length <= 280) return t;
+  const cut = t.slice(0, 280);
+  return cut.slice(0, Math.max(cut.lastIndexOf(" "), 200)) + "…";
+}
+
+function cleanTitle(title: string, brand: string): string {
+  const t = title.split(/\s+[|–—-]\s+/)[0].trim();
+  return t.toLowerCase().startsWith(brand.toLowerCase())
+    ? t.slice(brand.length).replace(/^[\s:–—-]+/, "") || t
+    : t;
 }
 
 function buildQueries(patterns: string[], concerns: string[]) {
@@ -101,41 +157,48 @@ async function tavily(q: string, key: string): Promise<Row[] | null> {
 
 async function tavilyProducts(
   source: (typeof PRODUCT_SOURCES)[number],
+  category: string,
   key: string,
 ): Promise<ProductRow[] | null> {
   const type = source.curlPatterns[0];
   const query = type
-    ? `${source.brand} type ${type} hair products`
-    : `${source.brand} hair products`;
+    ? `${source.brand} type ${type} hair ${category}`
+    : `${source.brand} ${category}`;
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
       query,
       include_domains: [source.domain],
-      max_results: 10,
+      max_results: 20,
       search_depth: "advanced",
+      include_raw_content: "text",
     }),
   });
   if (!res.ok) return null;
 
   const json = await res.json();
-  return (json.results ?? []).flatMap((r: { title?: string; url?: string }) => {
-    if (!r.title || !r.url) return [];
-    try {
-      if (new URL(r.url).hostname.replace(/^www\./, "") !== source.domain) {
+  return (json.results ?? []).flatMap(
+    (r: { title?: string; url?: string; content?: string; raw_content?: string }) => {
+      if (!r.title || !r.url) return [];
+      try {
+        const u = new URL(r.url);
+        if (u.hostname.replace(/^www\./, "") !== source.domain) return [];
+        if (!PRODUCT_PATH.test(u.pathname)) return [];
+        if (NON_PRODUCT_TITLE.test(r.title)) return [];
+      } catch {
         return [];
       }
-    } catch {
-      return [];
-    }
-    return [{
-      name: r.title,
-      brand: source.brand,
-      source_url: r.url,
-      curl_patterns: [...source.curlPatterns],
-    }];
-  });
+      return [{
+        name: cleanTitle(r.title, source.brand),
+        brand: source.brand,
+        source_url: r.url,
+        curl_patterns: [...source.curlPatterns],
+        ingredients: parseIngredients(r.raw_content ?? ""),
+        description: cleanDescription(r.content ?? ""),
+      }];
+    },
+  );
 }
 
 Deno.serve(async (req) => {
@@ -193,10 +256,15 @@ Deno.serve(async (req) => {
 
   const productsByUrl = new Map<string, ProductRow>();
   if (includeProducts && tvKey) {
-    for (const source of PRODUCT_SOURCES) {
-      const products = await tavilyProducts(source, tvKey).catch(() => null);
+    const jobs = PRODUCT_SOURCES.flatMap((source) =>
+      PRODUCT_CATEGORIES.map(async (category) => ({
+        label: `${source.brand} ${category}`,
+        products: await tavilyProducts(source, category, tvKey).catch(() => null),
+      }))
+    );
+    for (const { label, products } of await Promise.all(jobs)) {
       if (!products) {
-        errors.push(`${source.brand} products failed`);
+        errors.push(`${label} products failed`);
         continue;
       }
       for (const product of products) {
@@ -205,6 +273,10 @@ Deno.serve(async (req) => {
           existing.curl_patterns = [
             ...new Set([...existing.curl_patterns, ...product.curl_patterns]),
           ];
+          if (existing.ingredients.length === 0) {
+            existing.ingredients = product.ingredients;
+          }
+          if (!existing.description) existing.description = product.description;
         } else {
           productsByUrl.set(product.source_url, product);
         }
@@ -217,10 +289,51 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const { error } = await supabase
+    const { data: saved, error } = await supabase
       .from("products")
-      .upsert(products, { onConflict: "source_url" });
+      .upsert(
+        products.map(({ ingredients: _i, ...row }) => row),
+        { onConflict: "source_url" },
+      )
+      .select("id, source_url");
     if (error) return new Response(error.message, { status: 500 });
+
+    const idByUrl = new Map(saved.map((p) => [p.source_url, p.id]));
+    for (const product of products) {
+      const productId = idByUrl.get(product.source_url);
+      if (!productId || product.ingredients.length === 0) continue;
+
+      const { error: ingError } = await supabase
+        .from("ingredients")
+        .upsert(
+          product.ingredients.map((name) => ({ name })),
+          { onConflict: "name", ignoreDuplicates: true },
+        );
+      if (ingError) {
+        errors.push(`ingredients for ${product.source_url}: ${ingError.message}`);
+        continue;
+      }
+      const { data: ingRows, error: lookupError } = await supabase
+        .from("ingredients")
+        .select("id, name")
+        .in("name", product.ingredients);
+      if (lookupError || !ingRows) {
+        errors.push(`ingredient lookup for ${product.source_url} failed`);
+        continue;
+      }
+      const idByName = new Map(ingRows.map((i) => [i.name, i.id]));
+      const links = product.ingredients.flatMap((name, index) => {
+        const ingredientId = idByName.get(name);
+        return ingredientId
+          ? [{ product_id: productId, ingredient_id: ingredientId, position: index + 1 }]
+          : [];
+      });
+      await supabase.from("product_ingredients").delete().eq("product_id", productId);
+      const { error: linkError } = await supabase
+        .from("product_ingredients")
+        .insert(links);
+      if (linkError) errors.push(`links for ${product.source_url}: ${linkError.message}`);
+    }
   }
 
   return Response.json({

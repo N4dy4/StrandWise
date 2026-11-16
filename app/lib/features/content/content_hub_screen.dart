@@ -295,25 +295,120 @@ class _ProductSearchTabState extends State<ProductSearchTab> {
         title: Text('${p.brand} — ${p.name}'),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: Wrap(
-            spacing: 6,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final pattern in p.curlPatterns)
-                Chip(label: Text('Type $pattern hair')),
-              if (flags.isEmpty)
-                const Chip(label: Text('No flagged ingredients'))
-              else
-                for (final e in flags.entries)
-                  Chip(
-                    backgroundColor: AppColors.rose,
-                    label: Text('${_flagLabels[e.key]}: ${e.value.join(', ')}'),
-                  ),
+              if (p.description.isNotEmpty) ...[
+                Text(
+                  p.description,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+              ],
+              Wrap(
+                spacing: 6,
+                children: [
+                  for (final pattern in p.curlPatterns)
+                    Chip(label: Text('Type $pattern hair')),
+                  if (p.ingredients.isEmpty)
+                    const Chip(label: Text('Ingredients not listed yet'))
+                  else if (flags.isEmpty)
+                    const Chip(label: Text('No flagged ingredients'))
+                  else
+                    for (final e in flags.entries)
+                      Chip(
+                        backgroundColor: AppColors.rose,
+                        label: Text(
+                          '${_flagLabels[e.key]}: ${e.value.join(', ')}',
+                        ),
+                      ),
+                ],
+              ),
             ],
           ),
         ),
-        trailing: const Icon(Icons.open_in_new, size: 18),
-        onTap: () => openSource(p.sourceUrl),
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          tooltip: 'Product options',
+          onSelected: (action) {
+            if (action == 'ingredients') {
+              showIngredientCheck(context, p);
+            } else {
+              openSource(p.sourceUrl);
+            }
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(
+              value: 'ingredients',
+              child: Text('Check ingredients'),
+            ),
+            PopupMenuItem(value: 'source', child: Text('View source')),
+          ],
+        ),
+        onTap: () => showIngredientCheck(context, p),
       ),
     );
   }
+}
+
+/// Ingredient check for [product]: every ingredient in label order, with
+/// sulfates, silicones and drying alcohols highlighted, plus the citation.
+Future<void> showIngredientCheck(BuildContext context, Product product) {
+  const flagLabels = {
+    IngredientFlag.sulfate: 'Sulfate',
+    IngredientFlag.silicone: 'Silicone',
+    IngredientFlag.dryingAlcohol: 'Drying alcohol',
+  };
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.7,
+      maxChildSize: 0.95,
+      builder: (context, controller) => ListView(
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        children: [
+          Text(
+            '${product.brand} — ${product.name}',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          const Text('Ingredient check'),
+          const SizedBox(height: 12),
+          if (product.ingredients.isEmpty)
+            const Text(
+              'We could not read this product\'s ingredient list yet. '
+              'Check the brand\'s page for the full label.',
+            )
+          else
+            for (final (i, name) in product.ingredients.indexed)
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Text('${i + 1}.'),
+                title: Text(name),
+                trailing: IngredientFlagger.flagFor(name) == null
+                    ? null
+                    : Chip(
+                        backgroundColor: AppColors.rose,
+                        label: Text(
+                          flagLabels[IngredientFlagger.flagFor(name)]!,
+                        ),
+                      ),
+              ),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () => openSource(product.sourceUrl),
+            icon: const Icon(Icons.open_in_new, size: 18),
+            label: const Text('View source'),
+          ),
+          const Text(medicalDisclaimer, style: TextStyle(fontSize: 12)),
+        ],
+      ),
+    ),
+  );
 }
