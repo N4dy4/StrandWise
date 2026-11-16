@@ -1,3 +1,8 @@
+---
+name: strandwise-ui
+description: Build and review Flutter UI for StrandWise using its design tokens, screen patterns, and privacy requirements.
+---
+
 # StrandWise UI
 
 Use this skill for Flutter UI work in StrandWise. The runnable app is in
