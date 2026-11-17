@@ -2,12 +2,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
 import '../models/content_item.dart';
+import '../models/ingredient_info.dart';
 import '../models/product.dart';
 import 'local_content_repository.dart';
 
 abstract class ContentRepository {
   Future<List<ContentItem>> contentItems();
   Future<List<Product>> products();
+
+  /// Ingredient explainers keyed by lower-cased ingredient name.
+  Future<Map<String, IngredientInfo>> ingredientInfo();
 
   /// Supabase when configured, bundled sample data otherwise (local mode).
   factory ContentRepository.create() => SupabaseConfig.isConfigured
@@ -16,6 +20,23 @@ abstract class ContentRepository {
 }
 
 class SupabaseContentRepository implements ContentRepository {
+  @override
+  Future<Map<String, IngredientInfo>> ingredientInfo() async {
+    final rows = await Supabase.instance.client
+        .from('ingredients')
+        .select('name, what_it_is, why_used, hair_effects, info_source_url')
+        .neq('what_it_is', '');
+    return {
+      for (final r in rows)
+        (r['name'] as String).toLowerCase(): IngredientInfo(
+          whatItIs: r['what_it_is'] as String,
+          whyUsed: r['why_used'] as String,
+          hairEffects: r['hair_effects'] as String,
+          sourceUrl: r['info_source_url'] as String,
+        ),
+    };
+  }
+
   @override
   Future<List<ContentItem>> contentItems() async {
     final rows = await Supabase.instance.client.from('content_items').select();

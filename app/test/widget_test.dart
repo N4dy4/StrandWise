@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:strandwise/features/hairstyles/hairstyle_screen.dart';
 import 'package:strandwise/features/onboarding/disclaimer_screen.dart';
 import 'package:strandwise/features/profile/profile_screens.dart';
 import 'package:strandwise/main.dart';
+import 'package:strandwise/models/hair_profile.dart';
 import 'package:strandwise/theme/app_theme.dart';
 import 'package:strandwise/widgets/mockup_bottom_navigation.dart';
 
@@ -40,10 +42,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
-        home: const Scaffold(body: IngredientCheckScreen()),
+        home: Scaffold(
+          body: HairstyleScreen(profile: const HairProfile(curlPattern: '4C')),
+        ),
       ),
     );
-    expect(find.text('Ingredient check'), findsOneWidget);
+    expect(find.text('Hairstyles for you'), findsOneWidget);
 
     await tester.pumpWidget(
       MaterialApp(theme: AppTheme.light, home: const ProgressScreen()),

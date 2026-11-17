@@ -4,6 +4,7 @@ import '../../features/calendar/wash_calendar_screen.dart';
 import '../../features/content/content_hub_screen.dart';
 import '../../features/routine/routine_screen.dart';
 import '../../models/hair_profile.dart';
+import '../hairstyles/hairstyle_screen.dart';
 import '../profile/profile_screens.dart';
 import '../../widgets/mockup_bottom_navigation.dart';
 
@@ -30,7 +31,7 @@ class _AppShellState extends State<AppShell> {
       RoutineScreen(profile: widget.profile),
       ContentHubScreen(profile: widget.profile),
       WashCalendarScreen(profile: widget.profile),
-      const IngredientCheckScreen(),
+      HairstyleScreen(profile: widget.profile),
       ProfileHubScreen(
         profile: widget.profile,
         onEditProfile: widget.onEditProfile,

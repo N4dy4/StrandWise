@@ -1,4 +1,4 @@
-// Fetches videos (YouTube Data API) and articles (Tavily) and stores them in
+// Fetches videos (YouTube Data API; TikTok via Tavily + oEmbed) and articles (Tavily) and stores them in
 // content_items with source_url (R2). Links out only; nothing is re-hosted.
 //
 // Secrets: YOUTUBE_API_KEY, TAVILY_API_KEY, SYNC_SECRET
@@ -29,6 +29,9 @@ const PRODUCT_SOURCES = [
 
 interface Row {
   type: "video" | "article";
+  platform: "youtube" | "tiktok" | "web";
+  thumbnail_url: string;
+  published_at?: string | null;
   title: string;
   source_name: string;
   source_url: string;
@@ -129,6 +132,10 @@ async function youtube(q: string, key: string): Promise<Row[] | null> {
   const json = await res.json();
   return (json.items ?? []).map((i: any) => ({
     type: "video" as const,
+    platform: "youtube" as const,
+    thumbnail_url: i.snippet.thumbnails?.high?.url ??
+      i.snippet.thumbnails?.medium?.url ?? i.snippet.thumbnails?.default?.url ?? "",
+    published_at: i.snippet.publishedAt ?? null,
     title: i.snippet.title,
     source_name: i.snippet.channelTitle,
     source_url: `https://www.youtube.com/watch?v=${i.id.videoId}`,
@@ -141,17 +148,82 @@ async function tavily(q: string, key: string): Promise<Row[] | null> {
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ query: q, max_results: 5, search_depth: "basic" }),
+    body: JSON.stringify({
+      query: q,
+      max_results: 5,
+      search_depth: "basic",
+      exclude_domains: ["tiktok.com"],
+    }),
   });
   if (!res.ok) return null;
   const json = await res.json();
   return (json.results ?? []).map((r: any) => ({
     type: "article" as const,
+    platform: "web" as const,
+    thumbnail_url: "",
     title: r.title,
     source_name: new URL(r.url).hostname.replace(/^www\./, ""),
     source_url: r.url,
     curl_patterns: [],
     concerns: [],
+  }));
+}
+
+const TIKTOK_VIDEO = /^https:\/\/(www\.)?tiktok\.com\/@[\w.-]+\/video\/\d+/i;
+
+function cleanTikTokTitle(title: string): string {
+  return title
+    .replace(/\s*\|\s*TikTok\s*$/i, "")
+    .replace(/\s+on TikTok\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Best effort: oEmbed gives the real caption and thumbnail; failures are ignored.
+async function tiktokOembed(
+  url: string,
+): Promise<{ title?: string; thumbnail_url?: string }> {
+  try {
+    const res = await fetch(
+      `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`,
+    );
+    if (!res.ok) return {};
+    const j = await res.json();
+    return { title: j.title, thumbnail_url: j.thumbnail_url };
+  } catch {
+    return {};
+  }
+}
+
+async function tiktok(q: string, key: string): Promise<Row[] | null> {
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      query: `${q} tiktok`,
+      max_results: 8,
+      search_depth: "basic",
+      include_domains: ["tiktok.com"],
+    }),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  const hits = (json.results ?? []).filter(
+    (r: any) => r.url && r.title && TIKTOK_VIDEO.test(r.url),
+  );
+  return await Promise.all(hits.map(async (r: any) => {
+    const url = r.url.split(/[?#]/)[0];
+    const o = await tiktokOembed(url);
+    return {
+      type: "video" as const,
+      platform: "tiktok" as const,
+      thumbnail_url: o.thumbnail_url ?? "",
+      title: cleanTikTokTitle(o.title || r.title).slice(0, 200) || "TikTok video",
+      source_name: "TikTok",
+      source_url: url,
+      curl_patterns: [],
+      concerns: [],
+    };
   }));
 }
 
@@ -224,6 +296,7 @@ Deno.serve(async (req) => {
     const jobs: [string, Promise<Row[] | null>][] = [];
     if (ytKey) jobs.push(["youtube", youtube(q, ytKey)]);
     if (tvKey) jobs.push(["tavily", tavily(q, tvKey)]);
+    if (tvKey) jobs.push(["tiktok", tiktok(q, tvKey)]);
     for (const [name, job] of jobs) {
       const rows = await job.catch(() => null);
       if (!rows) {

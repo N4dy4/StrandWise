@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:strandwise/data/local_content_repository.dart';
 import 'package:strandwise/features/content/content_hub_screen.dart';
+import 'package:strandwise/models/ingredient_info.dart';
 import 'package:strandwise/models/product.dart';
 import 'package:strandwise/theme/app_theme.dart';
 
@@ -22,6 +23,16 @@ class _Repo extends LocalContentRepository {
       ],
     ),
   ];
+
+  @override
+  Future<Map<String, IngredientInfo>> ingredientInfo() async => const {
+    'glycerin': IngredientInfo(
+      whatItIs: 'A clear, sweet liquid humectant.',
+      whyUsed: 'Draws water into hair.',
+      hairEffects: 'Can hydrate; may cause frizz in very dry air.',
+      sourceUrl: 'https://example.com/glycerin',
+    ),
+  };
 }
 
 void main() {
@@ -47,5 +58,10 @@ void main() {
     expect(find.text('Sodium Lauryl Sulfate'), findsOneWidget);
     expect(find.text('Sulfate'), findsOneWidget);
     expect(find.text('Silicone'), findsOneWidget);
+
+    await tester.tap(find.text('Glycerin'));
+    await tester.pumpAndSettle();
+    expect(find.text('What it is'), findsOneWidget);
+    expect(find.text('Benefits & risks for hair'), findsOneWidget);
   });
 }

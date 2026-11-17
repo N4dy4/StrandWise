@@ -41,14 +41,16 @@ Phase 0 needs no tables yet. Phase 1 introduces `users` / `hair_profiles` etc. â
 
 ## 6. Content APIs (Phase 2)
 
-`supabase/functions/sync-content` pulls videos (YouTube Data API), articles, and
+`supabase/functions/sync-content` pulls videos (YouTube Data API; TikTok via Tavily
+search restricted to tiktok.com, `/@user/video/<id>` URLs only, oEmbed title/thumbnail
+best effort), articles, and
 official brand products (Tavily) with permanent `source_url` citations. Product
 sync includes Camille Rose, SheaMoisture (types 1-4), Ecoslay, and The Doux, and
 extracts each page's ingredient list when one can be parsed (so products can be
 flagged); pages whose ingredients can't be parsed are saved without them.
 Keys live in Supabase secrets, never in the app or repo.
 
-1. Run migrations through `0006_product_curl_patterns.sql` in the SQL Editor.
+1. Run migrations through `0012_content_source_url_unique.sql` (0011 adds `platform`, `thumbnail_url`, `published_at`; 0012 makes `source_url` unique for upserts) in the SQL Editor.
 2. Get keys: YouTube Data API v3 (Google Cloud Console) and Tavily (https://tavily.com). Either one works alone.
 3. Set secrets and deploy (needs the Supabase CLI, `brew install supabase/tap/supabase`):
    ```sh
@@ -59,5 +61,23 @@ Keys live in Supabase secrets, never in the app or repo.
    ```sh
    curl -X POST https://<project-ref>.supabase.co/functions/v1/sync-content \
      -H "x-sync-secret: <SYNC_SECRET>" -H "Content-Type: application/json" \
-     -d '{"curlPatterns":["3","4"],"concerns":["frizz","breakage"],"includeProducts":true}'
    ```
+
+## 7. AI assistant (Ask anything + hairstyles)
+
+`supabase/functions/ask-hair-ai` calls a small hosted LLM for the Ask anything
+tab and "Personalize with AI" on the Hairstyles tab. It uses Groq's free tier
+(`llama-3.1-8b-instant`) through an OpenAI-compatible API; no card needed. The
+key stays in Supabase secrets. Product picks are validated against the
+`products` table so each carries its `source_url`. Without Supabase or the key,
+the app falls back to rule-based hairstyles and shows a notice in Ask anything.
+
+```sh
+# free key: https://console.groq.com/keys
+supabase secrets set AI_API_KEY=...
+supabase functions deploy ask-hair-ai   # JWT verification on: the app's anon key is enough
+```
+
+Optional: `AI_MODEL` and `AI_BASE_URL` switch to any OpenAI-compatible provider
+(e.g. Gemini free tier at `https://generativelanguage.googleapis.com/v1beta/openai`).
+Free tiers are rate-limited; the app shows a retry message when it's hit.

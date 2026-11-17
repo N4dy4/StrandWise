@@ -1,4 +1,5 @@
 import '../models/content_item.dart';
+import '../models/ingredient_info.dart';
 import '../models/hair_profile.dart';
 import '../models/product.dart';
 import 'content_repository.dart';
@@ -6,6 +7,9 @@ import 'content_repository.dart';
 /// Bundled SAMPLE data so the app works without Supabase. Source URLs point
 /// at publisher sites; replace with curated, validated links before launch.
 class LocalContentRepository implements ContentRepository {
+  @override
+  Future<Map<String, IngredientInfo>> ingredientInfo() async => const {};
+
   @override
   Future<List<ContentItem>> contentItems() async => const [
     ContentItem(

@@ -16,7 +16,7 @@ class MockupBottomNavigation extends StatelessWidget {
     (Icons.home_outlined, 'Routine'),
     (Icons.play_circle_outline, 'Learn'),
     (Icons.calendar_month_outlined, 'Calendar'),
-    (Icons.science_outlined, 'Ingredients'),
+    (Icons.auto_awesome_outlined, 'Hairstyles'),
     (Icons.person_outline, 'Profile'),
   ];
 

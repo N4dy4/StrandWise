@@ -46,6 +46,7 @@ Recommendation service (rule-based v1 -> ML v2)
 - **Content/citations:** YouTube Data API for videos; Tavily or SerpAPI for articles/products. Store results in Postgres with source URLs so citations are permanent.
 - **AI model:**
   - **v1 — rule-based engine:** hair type x concerns -> routine templates. There is no training data at launch, so "ML" on day one would be fake.
+  - **v1 addition — small hosted LLM (decided 2026-11):** "Ask anything" answers and optional AI hairstyle ideas via the `ask-hair-ai` Edge Function (key server-side, product picks validated against `products` so citations hold, "not medical advice" shown). It is a language assistant only; routines and rankings stay rule-based, and there is no model training.
   - **v2 — ML personalization:** once users log routine adherence + progress, rank/reorder steps and products with collaborative filtering or an embedding model.
 
 ### Key data tables
