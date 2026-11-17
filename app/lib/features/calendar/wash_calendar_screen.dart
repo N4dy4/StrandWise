@@ -5,6 +5,7 @@ import '../../models/hair_profile.dart';
 import '../../models/wash_log.dart';
 import '../../services/routine_engine.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/strand_motion.dart';
 import 'log_wash_screen.dart';
 
 class WashCalendarScreen extends StatefulWidget {
@@ -44,6 +45,20 @@ class _WashCalendarScreenState extends State<WashCalendarScreen> {
     if (log == null) return;
     await WashHistoryStore.save(log);
     await _loadHistory();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.ink,
+        content: Row(
+          children: [
+            PopBadge(size: 28),
+            SizedBox(width: 12),
+            Text('Wash day logged'),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

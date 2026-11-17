@@ -8,6 +8,7 @@ import 'features/onboarding/disclaimer_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'models/hair_profile.dart';
 import 'theme/app_theme.dart';
+import 'widgets/strand_motion.dart';
 import 'widgets/strandwise_logo.dart';
 
 Future<void> main() async {
@@ -83,36 +84,53 @@ class _HomeScreenState extends State<HomeScreen> {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       body: profile == null
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const Spacer(),
-                    const StrandWiseLogo(size: 104),
-                    const SizedBox(height: 24),
-                    Text('StrandWise', style: textTheme.headlineLarge),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Hair care that learns your hair, backed by real research.',
-                      style: const TextStyle(color: AppColors.muted),
-                      textAlign: TextAlign.center,
-                    ),
-                    const Spacer(),
-                    const _PageIndicator(),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () => _beginOnboarding(context),
-                        child: const Text('Get started'),
+          ? StrandWaveBackground(
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const Spacer(),
+                      const FadeSlideIn(
+                        duration: Duration(milliseconds: 700),
+                        child: Floating(child: StrandWiseLogo(size: 104)),
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('I already have an account'),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      FadeSlideIn(
+                        delay: const Duration(milliseconds: 150),
+                        child: Text(
+                          'StrandWise',
+                          style: textTheme.headlineLarge,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const FadeSlideIn(
+                        delay: Duration(milliseconds: 300),
+                        child: Text(
+                          'Hair care that learns your hair, backed by real research.',
+                          style: TextStyle(color: AppColors.muted),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const Spacer(),
+                      const _PageIndicator(),
+                      const SizedBox(height: 24),
+                      FadeSlideIn(
+                        delay: const Duration(milliseconds: 450),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () => _beginOnboarding(context),
+                            child: const Text('Get started'),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('I already have an account'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -146,7 +164,9 @@ class _IndicatorDot extends StatelessWidget {
   final bool active;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: const Duration(milliseconds: 250),
+    curve: Curves.easeOut,
     height: 7,
     width: active ? 24 : 7,
     decoration: BoxDecoration(
