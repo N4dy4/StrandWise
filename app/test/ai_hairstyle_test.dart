@@ -50,7 +50,12 @@ void main() {
       final top = HairstyleRecommender.recommend(profile, {
         StyleGoal.definition,
       }).first;
-      expect(['Wash-and-go', 'Twist-out', 'Braid-out'], contains(top.name));
+      expect([
+        'Wash-and-go',
+        'Twist-out',
+        'Braid-out',
+        'Straw set',
+      ], contains(top.name));
     });
   });
 

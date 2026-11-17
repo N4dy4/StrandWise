@@ -23,6 +23,8 @@ abstract final class RoutineEngine {
       int.tryParse(p.curlPattern.isEmpty ? '' : p.curlPattern[0]) ?? 2;
 
   static int washIntervalDays(HairProfile p) {
+    final chosen = p.washFrequency;
+    if (chosen != null) return chosen.days;
     final fam = _family(p);
     var days = switch (fam) {
       1 => 2,
@@ -37,7 +39,8 @@ abstract final class RoutineEngine {
   }
 
   static String washFrequency(HairProfile p) {
-    return 'Every ${washIntervalDays(p)} days';
+    final d = washIntervalDays(p);
+    return d == 1 ? 'Every day' : 'Every $d days';
   }
 
   static DateTime nextWashDate(HairProfile profile, DateTime lastWashDate) {
@@ -73,14 +76,21 @@ abstract final class RoutineEngine {
         ),
       RoutineStep(
         'Condition',
-        p.porosity == Porosity.high || c.contains(HairConcern.dryness)
+        p.porosity == Porosity.high ||
+                c.contains(HairConcern.dryness) ||
+                p.colorTreated ||
+                p.strandSize == StrandSize.coarse
             ? 'Use a rich conditioner; detangle gently with fingers or a wide-tooth comb.'
             : 'Use a lightweight conditioner and detangle gently.',
       ),
-      if (p.porosity == Porosity.high || c.contains(HairConcern.breakage))
-        const RoutineStep(
+      if (p.porosity == Porosity.high ||
+          p.colorTreated ||
+          c.contains(HairConcern.breakage))
+        RoutineStep(
           'Deep treatment',
-          'Add a protein/moisture mask every 2–4 washes, following the label.',
+          p.colorTreated
+              ? 'Add a color-safe moisture or bond-repair mask every 2–4 washes, following the label.'
+              : 'Add a protein/moisture mask every 2–4 washes, following the label.',
         ),
       RoutineStep(
         'Seal & style',

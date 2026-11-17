@@ -273,6 +273,171 @@ async function tavilyProducts(
   );
 }
 
+// Hairstyle tutorials. Keys must match HairstyleRecommender style names; `q` overrides
+// the search text and `families` limits which curl families are searched.
+const FAMILY_LABEL: Record<string, string> = { "2": "wavy", "3": "curly", "4": "coily" };
+const TUTORIAL_STYLES: { name: string; q?: string; families: string[] }[] = [
+  { name: "Wash-and-go", families: ["2", "3", "4"] },
+  { name: "Twist-out", families: ["3", "4"] },
+  { name: "Braid-out", families: ["3", "4"] },
+  { name: "Pineapple bun / high puff", q: "pineapple high puff", families: ["2", "3", "4"] },
+  { name: "Loose protective braids", families: ["3", "4"] },
+  { name: "Flat twists", families: ["3", "4"] },
+  { name: "Silk press", families: ["3", "4"] },
+  { name: "Layered cut with diffused finish", q: "layered haircut diffuse", families: ["2", "3"] },
+  { name: "Air-dried waves", q: "air dry waves", families: ["2"] },
+  { name: "Low bun", families: ["2", "3", "4"] },
+  { name: "Bantu knots", families: ["3", "4"] },
+  { name: "Knotless braids", families: ["3", "4"] },
+  { name: "Box braids", families: ["4"] },
+  { name: "Cornrows", families: ["4"] },
+  { name: "Passion twists", families: ["4"] },
+  { name: "Two-strand twists", families: ["3", "4"] },
+  { name: "Mini twists", families: ["3", "4"] },
+  { name: "Mini braids", families: ["3", "4"] },
+  { name: "Finger coils", families: ["4"] },
+  { name: "Curly bob", families: ["2", "3"] },
+  { name: "Shag cut", families: ["2", "3"] },
+  { name: "Sleek low ponytail", families: ["2", "3", "4"] },
+  { name: "Space buns", families: ["2", "3", "4"] },
+  { name: "Half-up half-down", families: ["2", "3", "4"] },
+  { name: "Roller set", families: ["3", "4"] },
+  { name: "Flexi rod set", families: ["3", "4"] },
+  { name: "Perm rod set", families: ["3", "4"] },
+  { name: "Straw set", families: ["3", "4"] },
+  { name: "Faux locs", families: ["4"] },
+  { name: "Crochet braids", families: ["4"] },
+  { name: "Protective wig install", families: ["3", "4"] },
+  { name: "Rope twists", families: ["4"] },
+  { name: "Halo braid", families: ["3", "4"] },
+  { name: "Dutch braids", families: ["3", "4"] },
+  { name: "Slick back bun", families: ["3", "4"] },
+  { name: "Curtain bangs with layers", q: "curtain bangs layers", families: ["2", "3"] },
+  { name: "Silk wrap", families: ["3", "4"] },
+];
+const MAX_TUTORIAL_SEARCHES = 60; // 100 quota units each; default daily quota is 10,000
+const TUTORIALS_PER_SEARCH = 3;
+
+function unescapeHtml(s: string): string {
+  return s
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+interface TutorialRow {
+  style_name: string;
+  title: string;
+  source_name: string;
+  source_url: string;
+  thumbnail_url: string;
+  platform: "youtube";
+  curl_patterns: string[];
+}
+
+// Returns null on API failure (e.g. quota exhausted) so callers can stop early.
+async function youtubeTutorials(
+  query: string,
+  key: string,
+): Promise<{ rows: { title: string; channel: string; id: string; thumb: string }[] } | { error: string }> {
+  const url = new URL("https://www.googleapis.com/youtube/v3/search");
+  url.search = new URLSearchParams({
+    part: "snippet",
+    type: "video",
+    videoDuration: "medium", // 4–20 min: excludes Shorts and very long videos
+    maxResults: String(TUTORIALS_PER_SEARCH),
+    safeSearch: "strict",
+    relevanceLanguage: "en",
+    q: query,
+    key,
+  }).toString();
+  const res = await fetch(url);
+  if (!res.ok) return { error: `HTTP ${res.status}` };
+  const json = await res.json();
+  return {
+    rows: (json.items ?? []).filter((i: any) => i.id?.videoId).map((i: any) => ({
+      title: unescapeHtml(i.snippet.title ?? ""),
+      channel: unescapeHtml(i.snippet.channelTitle ?? "YouTube"),
+      id: i.id.videoId,
+      thumb: i.snippet.thumbnails?.medium?.url ?? "",
+    })),
+  };
+}
+
+async function syncTutorials(body: any, ytKey: string | undefined) {
+  if (!ytKey) return Response.json({ error: "YOUTUBE_API_KEY not configured" }, { status: 500 });
+  const offset = Math.max(0, Number(body.styleOffset) || 0);
+  const limit = Math.max(1, Number(body.styleLimit) || TUTORIAL_STYLES.length);
+  const styles = TUTORIAL_STYLES.slice(offset, offset + limit);
+  const errors: string[] = [];
+  const byUrl = new Map<string, TutorialRow>();
+  let searches = 0;
+  let stoppedEarly = false;
+
+  outer:
+  for (const style of styles) {
+    for (const fam of style.families) {
+      if (searches >= MAX_TUTORIAL_SEARCHES) {
+        stoppedEarly = true;
+        break outer;
+      }
+      searches++;
+      const q = `${style.q ?? style.name} tutorial for ${FAMILY_LABEL[fam]} hair`;
+      const result = await youtubeTutorials(q, ytKey).catch(() => ({ error: "fetch failed" }));
+      if ("error" in result) {
+        errors.push(`"${q}": ${result.error}`);
+        if (result.error === "HTTP 403") {
+          stoppedEarly = true; // most likely quota exhausted
+          break outer;
+        }
+        continue;
+      }
+      for (const r of result.rows) {
+        const source_url = `https://www.youtube.com/watch?v=${r.id}`;
+        const existing = byUrl.get(source_url);
+        if (existing && existing.style_name === style.name) {
+          existing.curl_patterns = [...new Set([...existing.curl_patterns, fam])];
+        } else if (!existing) {
+          byUrl.set(source_url, {
+            style_name: style.name,
+            title: r.title,
+            source_name: r.channel,
+            source_url,
+            thumbnail_url: r.thumb,
+            platform: "youtube",
+            curl_patterns: [fam],
+          });
+        }
+      }
+    }
+  }
+
+  const rows = [...byUrl.values()];
+  if (rows.length > 0) {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { error } = await supabase
+      .from("hairstyle_tutorials")
+      .upsert(rows, { onConflict: "source_url" });
+    if (error) return new Response(error.message, { status: 500 });
+  }
+  return Response.json({
+    tutorialsUpserted: rows.length,
+    searches,
+    styleOffset: offset,
+    stylesProcessed: styles.length,
+    totalStyles: TUTORIAL_STYLES.length,
+    stoppedEarly,
+    errors,
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.headers.get("x-sync-secret") !== Deno.env.get("SYNC_SECRET")) {
     return new Response("Unauthorized", { status: 401 });
@@ -284,6 +449,10 @@ Deno.serve(async (req) => {
   }
 
   const body = await req.json().catch(() => ({}));
+  // Tutorials-only unless the caller also opts into the content sync.
+  if (body.includeTutorials === true && body.includeContent !== true) {
+    return await syncTutorials(body, ytKey);
+  }
   const patterns: string[] = body.curlPatterns ?? DEFAULT_PATTERNS;
   const concerns: string[] = (body.concerns ?? CONCERNS).filter((c: string) =>
     CONCERNS.includes(c)

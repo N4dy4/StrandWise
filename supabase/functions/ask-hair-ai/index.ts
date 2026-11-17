@@ -2,7 +2,7 @@
 // stays server-side; the app only sends the question and the hair profile.
 //
 // Secrets: AI_API_KEY (free Groq key from https://console.groq.com/keys)
-// Optional: AI_MODEL (default llama-3.1-8b-instant) and AI_BASE_URL (default
+// Optional: AI_MODEL (default openai/gpt-oss-20b) and AI_BASE_URL (default
 // Groq's OpenAI-compatible endpoint; any OpenAI-compatible provider works,
 // e.g. Gemini's https://generativelanguage.googleapis.com/v1beta/openai).
 // (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided automatically.)
@@ -41,9 +41,9 @@ async function chat(system: string, user: string): Promise<any> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: Deno.env.get("AI_MODEL") ?? "llama-3.1-8b-instant",
+      model: Deno.env.get("AI_MODEL") ?? "openai/gpt-oss-20b",
       temperature: 0.4,
-      max_tokens: 700,
+      max_tokens: 1500, // reasoning models spend part of this thinking
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
@@ -79,6 +79,14 @@ Deno.serve(async (req) => {
     `Density: ${clip(p.density, 10)}`,
     `Scalp: ${clip(p.scalp, 10)}`,
     `Concerns: ${concerns}`,
+    `Strand size: ${clip(p.strandSize, 10)}`,
+    `Color-treated: ${p.colorTreated === true ? "yes" : "no"}`,
+    `Wash frequency: ${clip(p.washFrequency, 12) || "unknown"}`,
+    `Usual styles: ${
+      (Array.isArray(p.styling) ? p.styling : []).slice(0, 5).map((s: unknown) =>
+        clip(s, 20)
+      ).join(", ") || "unknown"
+    }`,
   ].join("\n");
 
   const base =

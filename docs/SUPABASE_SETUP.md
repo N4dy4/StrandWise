@@ -63,11 +63,26 @@ Keys live in Supabase secrets, never in the app or repo.
      -H "x-sync-secret: <SYNC_SECRET>" -H "Content-Type: application/json" \
    ```
 
+**Hairstyle tutorials** (`hairstyle_tutorials`, migration 0013): a tutorials-only run,
+enabled with `"includeTutorials": true` (add `"includeContent": true` to also run the
+content sync). It searches YouTube for `<style> tutorial for <wavy|curly|coily> hair`
+per style × curl family (medium-length videos, strict SafeSearch, English), keeps the top 3,
+and upserts on `source_url`. Each search costs 100 quota units (default 10,000/day), so a
+run is capped at 60 searches; process styles in batches:
+
+```sh
+curl -X POST https://<project-ref>.supabase.co/functions/v1/sync-content \
+  -H "x-sync-secret: <SYNC_SECRET>" -H "Content-Type: application/json" \
+  -d '{"includeTutorials":true,"styleOffset":0,"styleLimit":12}'
+```
+
+The response reports `searches`, `totalStyles` and `stoppedEarly` (quota/limit hit); continue with the next `styleOffset`.
+
 ## 7. AI assistant (Ask anything + hairstyles)
 
 `supabase/functions/ask-hair-ai` calls a small hosted LLM for the Ask anything
 tab and "Personalize with AI" on the Hairstyles tab. It uses Groq's free tier
-(`llama-3.1-8b-instant`) through an OpenAI-compatible API; no card needed. The
+(`openai/gpt-oss-20b`) through an OpenAI-compatible API; no card needed. The
 key stays in Supabase secrets. Product picks are validated against the
 `products` table so each carries its `source_url`. Without Supabase or the key,
 the app falls back to rule-based hairstyles and shows a notice in Ask anything.
