@@ -8,6 +8,7 @@ import '../../services/content_ranker.dart';
 import '../../services/hairstyle_recommender.dart';
 import '../../services/routine_engine.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/strand_motion.dart';
 import '../content/content_hub_screen.dart' show openSource;
 
 /// Home dashboard: AI-tuned routine overview plus highlights from the
@@ -80,33 +81,36 @@ class _RoutineScreenState extends State<RoutineScreen> {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 16),
-          Card(
-            color: AppColors.pink,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Personalized by your hair profile',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 120),
+            child: Card(
+              color: AppColors.pink,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Personalized by your hair profile',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    routine.name,
-                    style: Theme.of(context).textTheme.titleLarge
-                        ?.copyWith(color: Colors.white),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${routine.frequency} · ${profile.strandSize.name} strands'
-                    '${profile.colorTreated ? ' · color-treated' : ''}',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      routine.name,
+                      style: Theme.of(context).textTheme.titleLarge
+                          ?.copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${routine.frequency} · ${profile.strandSize.name} strands'
+                      '${profile.colorTreated ? ' · color-treated' : ''}',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/profile_store.dart';
 import '../../models/hair_profile.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/strand_motion.dart';
 
 const _hairPatternGroups = [
   ('Straight', ['1A', '1B', '1C']),
@@ -297,23 +298,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            LinearProgressIndicator(
-              value: (_step + 1) / _titles.length,
-              borderRadius: BorderRadius.circular(8),
+            TweenAnimationBuilder<double>(
+              tween: Tween(end: (_step + 1) / _titles.length),
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => LinearProgressIndicator(
+                value: value,
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             const SizedBox(height: 24),
             const SizedBox(height: 28),
-            Text(
-              _titles[_step],
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _subtitles[_step],
-              style: const TextStyle(color: AppColors.muted),
+            FadeSlideIn(
+              key: ValueKey('heading$_step'),
+              duration: const Duration(milliseconds: 350),
+              offset: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _titles[_step],
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _subtitles[_step],
+                    style: const TextStyle(color: AppColors.muted),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
-            Expanded(child: SingleChildScrollView(child: _body())),
+            Expanded(
+              child: SingleChildScrollView(
+                child: FadeSlideIn(
+                  key: ValueKey('body$_step'),
+                  delay: const Duration(milliseconds: 80),
+                  duration: const Duration(milliseconds: 350),
+                  child: _body(),
+                ),
+              ),
+            ),
             SizedBox(
               width: double.infinity,
               child: FilledButton(

@@ -77,18 +77,24 @@ class _NavigationIcon extends StatelessWidget {
       child: IconButton(
         tooltip: label,
         onPressed: onTap,
-        icon: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: selected ? AppColors.pink : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: 22,
-            color: selected ? Colors.white : AppColors.muted,
+        icon: AnimatedScale(
+          scale: selected ? 1.12 : 1,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: selected ? AppColors.pink : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: selected ? Colors.white : AppColors.muted,
+            ),
           ),
         ),
       ),
