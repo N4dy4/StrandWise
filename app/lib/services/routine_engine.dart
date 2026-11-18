@@ -22,7 +22,17 @@ abstract final class RoutineEngine {
   static int _family(HairProfile p) =>
       int.tryParse(p.curlPattern.isEmpty ? '' : p.curlPattern[0]) ?? 2;
 
+  /// Looser patterns (1–2) shouldn't go a week without washing; curly and
+  /// coily patterns (3–4) shouldn't be washed more than twice a week.
+  static (int min, int max) washIntervalBounds(HairProfile p) =>
+      _family(p) >= 3 ? (3, 14) : (1, 6);
+
   static int washIntervalDays(HairProfile p) {
+    final (lo, hi) = washIntervalBounds(p);
+    return _baseInterval(p).clamp(lo, hi);
+  }
+
+  static int _baseInterval(HairProfile p) {
     final chosen = p.washFrequency;
     if (chosen != null) return chosen.days;
     final fam = _family(p);

@@ -7,6 +7,7 @@ import '../../models/hair_profile.dart';
 import '../hairstyles/hairstyle_screen.dart';
 import '../profile/profile_screens.dart';
 import '../../widgets/mockup_bottom_navigation.dart';
+import '../../widgets/strand_motion.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({
@@ -40,7 +41,13 @@ class _AppShellState extends State<AppShell> {
 
     return Scaffold(
       body: SafeArea(
-        child: IndexedStack(index: _selectedIndex, children: pages),
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            for (var i = 0; i < pages.length; i++)
+              TabEntrance(active: i == _selectedIndex, child: pages[i]),
+          ],
+        ),
       ),
       bottomNavigationBar: MockupBottomNavigation(
         currentIndex: _selectedIndex,

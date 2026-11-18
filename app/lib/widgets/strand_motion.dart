@@ -74,6 +74,58 @@ class _FadeSlideInState extends State<FadeSlideIn>
   }
 }
 
+/// Replays a fade/lift each time [active] turns true, without rebuilding
+/// [child]'s state. Used for tabs kept alive in an IndexedStack.
+class TabEntrance extends StatefulWidget {
+  const TabEntrance({super.key, required this.active, required this.child});
+
+  final bool active;
+  final Widget child;
+
+  @override
+  State<TabEntrance> createState() => _TabEntranceState();
+}
+
+class _TabEntranceState extends State<TabEntrance>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+    value: 1,
+  );
+  late final Animation<double> _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+
+  @override
+  void didUpdateWidget(TabEntrance old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active && !_reduceMotion(context)) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _curve,
+    child: widget.child,
+    builder: (context, child) => Opacity(
+      opacity: _curve.value,
+      child: Transform.translate(
+        offset: Offset(0, (1 - _curve.value) * 24),
+        child: child,
+      ),
+    ),
+  );
+}
+
 /// Wraps [children] in a column whose items enter one after another.
 class StaggeredColumn extends StatelessWidget {
   const StaggeredColumn({

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/hair_profile.dart';
 import '../../models/wash_log.dart';
 import '../../theme/app_theme.dart';
 
@@ -22,10 +23,12 @@ class LogWashScreen extends StatefulWidget {
 
 class _LogWashScreenState extends State<LogWashScreen> {
   static const _stepTitles = [
+    'Before',
     'Pre-poo',
     'Cleanse',
     'Condition',
     'Style',
+    'After',
     'Rate products',
   ];
 
@@ -35,6 +38,9 @@ class _LogWashScreenState extends State<LogWashScreen> {
   final _style = TextEditingController();
 
   var _step = 0;
+  HairFeel? _feelBefore;
+  HairFeel? _feelAfter;
+  final _styling = <HairStyling>{};
   var _prePoo = false;
   PrePooType? _prePooType;
   _ConditionChoice? _conditionChoice;
@@ -77,18 +83,20 @@ class _LogWashScreenState extends State<LogWashScreen> {
   }.toList();
 
   bool get _canContinue => switch (_step) {
-    0 => !_prePoo || _prePooType != null,
-    1 => _shampoo.text.trim().isNotEmpty,
-    2 =>
+    0 => _feelBefore != null,
+    1 => !_prePoo || _prePooType != null,
+    2 => _shampoo.text.trim().isNotEmpty,
+    3 =>
       _conditionChoice != null &&
           (!_needsRinseOut || _rinseOut.text.trim().isNotEmpty) &&
           (!_needsDeep || _deep.text.trim().isNotEmpty),
+    5 => _feelAfter != null,
     _ => true,
   };
 
   void _next() {
     // Keep a product that was typed but not yet added with +.
-    if (_step == 3) _addStyleProduct();
+    if (_step == 4) _addStyleProduct();
     if (_step < _stepTitles.length - 1) {
       setState(() => _step++);
     } else {
@@ -108,6 +116,9 @@ class _LogWashScreenState extends State<LogWashScreen> {
         rinseOutConditioner: _needsRinseOut ? _rinseOut.text.trim() : null,
         deepConditioner: _needsDeep ? _deep.text.trim() : null,
         styleProducts: _styleProducts,
+        feelBefore: _feelBefore,
+        feelAfter: _feelAfter,
+        styling: {..._styling},
         ratings: {for (final p in products) p: _ratings[p] ?? 5},
       ),
     );
@@ -187,16 +198,48 @@ class _LogWashScreenState extends State<LogWashScreen> {
   }
 
   Widget _stepBody() => switch (_step) {
-    0 => _prePooStep(),
-    1 => _cleanseStep(),
-    2 => _conditionStep(),
-    3 => _styleStep(),
+    0 => _feelStep(
+      'How did your hair feel before this wash day?',
+      _feelBefore,
+      (feel) => _feelBefore = feel,
+    ),
+    1 => _prePooStep(),
+    2 => _cleanseStep(),
+    3 => _conditionStep(),
+    4 => _styleStep(),
+    5 => _feelStep(
+      'How does your hair feel after this wash day?',
+      _feelAfter,
+      (feel) => _feelAfter = feel,
+    ),
     _ => _ratingStep(),
   };
 
   Widget _label(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+  );
+
+  Widget _feelStep(
+    String question,
+    HairFeel? selected,
+    void Function(HairFeel feel) onSelect,
+  ) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _label(question),
+      Wrap(
+        spacing: 8,
+        children: [
+          for (final feel in HairFeel.values)
+            ChoiceChip(
+              label: Text(feel.label),
+              selected: selected == feel,
+              onSelected: (_) => setState(() => onSelect(feel)),
+            ),
+        ],
+      ),
+    ],
   );
 
   Widget _prePooStep() => Column(
@@ -330,6 +373,22 @@ class _LogWashScreenState extends State<LogWashScreen> {
           ],
         ),
       ],
+      const SizedBox(height: 24),
+      _label('How did you style your hair this wash day?'),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final styling in HairStyling.values)
+            FilterChip(
+              label: Text(styling.label),
+              selected: _styling.contains(styling),
+              onSelected: (on) => setState(
+                () => on ? _styling.add(styling) : _styling.remove(styling),
+              ),
+            ),
+        ],
+      ),
     ],
   );
 

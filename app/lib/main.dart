@@ -75,7 +75,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _beginOnboarding(BuildContext context) => _open(
     context,
     DisclaimerScreen(
-      onDone: (profile) => setState(() => this.profile = profile),
+      onDone: (profile) {
+        setState(() => this.profile = profile);
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      },
     ),
   );
 

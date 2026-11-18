@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'hair_profile.dart';
+
 enum PrePooType {
   oil('Oil'),
   conditioner('Conditioner'),
@@ -7,6 +9,15 @@ enum PrePooType {
   other('Other');
 
   const PrePooType(this.label);
+  final String label;
+}
+
+enum HairFeel {
+  dry('Dry'),
+  normal('Normal'),
+  oily('Oily');
+
+  const HairFeel(this.label);
   final String label;
 }
 
@@ -20,6 +31,9 @@ class WashLog {
     this.deepConditioner,
     this.styleProducts = const [],
     this.ratings = const {},
+    this.feelBefore,
+    this.feelAfter,
+    this.styling = const {},
   });
 
   final DateTime date;
@@ -37,6 +51,13 @@ class WashLog {
   /// Product name -> rating from 1 to 10.
   final Map<String, int> ratings;
 
+  /// How the hair felt before and after this wash; null on older logs.
+  final HairFeel? feelBefore;
+  final HairFeel? feelAfter;
+
+  /// How the hair was styled after this wash.
+  final Set<HairStyling> styling;
+
   bool get didPrePoo => prePooType != null;
 
   Map<String, dynamic> toJson() => {
@@ -48,6 +69,9 @@ class WashLog {
     'deepConditioner': deepConditioner,
     'styleProducts': styleProducts,
     'ratings': ratings,
+    'feelBefore': feelBefore?.name,
+    'feelAfter': feelAfter?.name,
+    'styling': styling.map((s) => s.name).toList(),
   };
 
   factory WashLog.fromJson(Map<String, dynamic> json) => WashLog(
@@ -69,7 +93,21 @@ class WashLog {
       for (final entry in ((json['ratings'] as Map?) ?? const {}).entries)
         entry.key as String: entry.value as int,
     },
+    feelBefore: _feel(json['feelBefore']),
+    feelAfter: _feel(json['feelAfter']),
+    styling: {
+      for (final name in (json['styling'] as List? ?? const []))
+        for (final s in HairStyling.values)
+          if (s.name == name) s,
+    },
   );
+
+  static HairFeel? _feel(Object? name) {
+    for (final f in HairFeel.values) {
+      if (f.name == name) return f;
+    }
+    return null;
+  }
 
   String encode() => jsonEncode(toJson());
 }
